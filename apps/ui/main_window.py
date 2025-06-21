@@ -1,14 +1,38 @@
 import os
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFileSystemModel, QTreeView,
-    QListWidget, QListWidgetItem, QLabel, QPushButton, QSplitter, QFrame,
-    QStatusBar, QHeaderView
+    QMainWindow, QWidget, QVBoxLayout, QFileSystemModel, QTreeView,
+    QListWidget, QListWidgetItem, QGraphicsView, QGraphicsScene,
+    QGraphicsPixmapItem, QPushButton, QSplitter, QStatusBar, QHeaderView
 )
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
+
+
+class ImagePreviewView(QGraphicsView):
+    def __init__(self):
+        super().__init__()
+        self.setScene(QGraphicsScene(self))
+        self._pixmap_item = QGraphicsPixmapItem()
+        self.scene().addItem(self._pixmap_item)
+        self._zoom_factor = 1.0
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setRenderHint(self.viewport().Painter.Antialiasing)
+
+    def set_image(self, pixmap):
+        self._zoom_factor = 1.0
+        self.resetTransform()
+        self._pixmap_item.setPixmap(pixmap)
+        self.fitInView(self._pixmap_item, Qt.KeepAspectRatio)
+
+    def wheelEvent(self, event):
+        if not self._pixmap_item.pixmap().isNull():
+            zoom_in = event.angleDelta().y() > 0
+            factor = 1.25 if zoom_in else 0.8
+            self._zoom_factor *= factor
+            self.scale(factor, factor)
 
 
 class MainWindow(QMainWindow):
@@ -34,8 +58,6 @@ class MainWindow(QMainWindow):
         self.folder_view.setModel(self.folder_model)
         self.folder_view.setRootIndex(self.folder_model.index(self.get_home_dir()))
         self.folder_view.setHeaderHidden(True)
-
-        # 💡 表示改善のための追加設定
         self.folder_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.folder_view.setTextElideMode(Qt.ElideNone)
         self.folder_view.header().setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -52,17 +74,15 @@ class MainWindow(QMainWindow):
         self.thumbnail_list.setMinimumWidth(300)
         self.thumbnail_list.itemClicked.connect(self.on_thumbnail_clicked)
 
-        self.preview_label = QLabel("📷 プレビュー領域")
-        self.preview_label.setAlignment(Qt.AlignCenter)
-        self.preview_label.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc;")
-        self.preview_label.setMinimumSize(400, 400)
+        self.preview_view = ImagePreviewView()
+        self.preview_view.setMinimumSize(400, 400)
 
         self.map_view = QWebEngineView()
         self.map_view.setHtml("<html><body><p>🗺️ 地図ビュー（未実装）</p></body></html>")
         self.map_view.setMinimumSize(400, 400)
 
         right_splitter = QSplitter(Qt.Vertical)
-        right_splitter.addWidget(self.preview_label)
+        right_splitter.addWidget(self.preview_view)
         right_splitter.addWidget(self.map_view)
 
         top_splitter = QSplitter(Qt.Horizontal)
@@ -104,11 +124,7 @@ class MainWindow(QMainWindow):
             self.current_index = index
             pixmap = QPixmap(self.image_paths[index])
             if not pixmap.isNull():
-                self.preview_label.setPixmap(pixmap.scaled(
-                    self.preview_label.size(),
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                ))
+                self.preview_view.set_image(pixmap)
             else:
-                self.preview_label.setText("❌ 読み込み失敗")
-
+                self.preview_view.scene().clear()
+                self.statusBar().showMessage("❌ 読み込み失敗", 3000)

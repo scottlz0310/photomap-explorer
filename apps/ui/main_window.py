@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QGraphicsPixmapItem, QPushButton, QSplitter, QStatusBar, QHeaderView
 )
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
@@ -19,8 +19,9 @@ class ImagePreviewView(QGraphicsView):
         self.scene().addItem(self._pixmap_item)
         self._zoom_factor = 1.0
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.setRenderHint(self.viewport().Painter.Antialiasing)
-
+        self.setRenderHint(QPainter.Antialiasing)
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
+        
     def set_image(self, pixmap):
         self._zoom_factor = 1.0
         self.resetTransform()

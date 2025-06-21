@@ -28,10 +28,15 @@ class MainWindow(QMainWindow):
         # フォルダビュー
         self.folder_model = QFileSystemModel()
         self.folder_model.setRootPath('')
+       # フォルダビュー（QTreeView）初期化
         self.folder_view = QTreeView()
         self.folder_view.setModel(self.folder_model)
         self.folder_view.setRootIndex(self.folder_model.index(self.get_home_dir()))
         self.folder_view.setHeaderHidden(True)
+        # 横スクロールバーを必要に応じて表示（長いパスに対応）
+        self.folder_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        # ファイル名を「...」で省略せずフル表示（必要ならスクロール）
+        self.folder_view.setTextElideMode(Qt.ElideNone)
         self.folder_view.clicked.connect(self.on_folder_selected)
 
         # サムネイル一覧

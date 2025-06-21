@@ -1,0 +1,14 @@
+project-root/
+├── apps/                  ← アプリ本体の機能モジュール群
+│   ├── main_app.py        ← 起動用エントリーポイント（暫定）
+│   ├── preview_panel.py   ← プレビュー＋地図ビューの分離先候補
+│   ├── thumbnail_panel.py ← サムネイル一覧管理モジュール
+│   ├── folder_panel.py    ← フォルダブラウザ（お気に入り対応も将来ここ）
+│   └── __init__.py
+├── docs/
+│   └── ui-mock.md
+├── resources/             ← アイコン、HTMLテンプレート、初期画像など
+├── tests/
+├── README.md
+└── config/
+    └── settings.json      ← 将来の拡張：お気に入りや状態保存

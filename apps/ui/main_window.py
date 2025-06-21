@@ -10,6 +10,9 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
 
+from apps.logic.gps_parser import extract_gps_coords
+from apps.logic.map_generator import generate_map_html
+
 
 class ImagePreviewView(QGraphicsView):
     def __init__(self):
@@ -120,12 +123,19 @@ class MainWindow(QMainWindow):
         index = self.thumbnail_list.row(item)
         self.display_image_by_index(index)
 
+
     def display_image_by_index(self, index):
         if 0 <= index < len(self.image_paths):
             self.current_index = index
             pixmap = QPixmap(self.image_paths[index])
             if not pixmap.isNull():
                 self.preview_view.set_image(pixmap)
+
+                # 📍 地図連携：Exifから座標 → HTML生成 → 表示
+                coords = extract_gps_coords(self.image_paths[index])
+                html = generate_map_html(coords)
+                self.map_view.setHtml(html)
+
             else:
                 self.preview_view.scene().clear()
                 self.statusBar().showMessage("❌ 読み込み失敗", 3000)

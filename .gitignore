@@ -9,6 +9,13 @@ venv/
 # IDE や OSのゴミファイル
 .DS_Store
 *.swp
+*.ini
 
 # その他除外したい一時ファイル
 *.log
+*.spec
+*.ini
+dist/
+build/
+devel/
+idea/

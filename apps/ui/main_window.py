@@ -7,6 +7,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtCore import QStandardPaths
+from PyQt5.QtWidgets import QFileDialog
+
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
 
@@ -43,6 +46,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PhotoMap Explorer")
+        self.setWindowIcon(QIcon("assets/pme.ico"))
         self.setGeometry(100, 100, 1400, 900)
 
         self.image_paths = []
@@ -82,7 +86,7 @@ class MainWindow(QMainWindow):
         self.preview_view.setMinimumSize(400, 400)
 
         self.map_view = QWebEngineView()
-        self.map_view.setHtml("<html><body><p>🗺️ 地図ビュー（未実装）</p></body></html>")
+        self.map_view.setHtml("<html><body><p>🗺️ 地図ビュー</p></body></html>")
         self.map_view.setMinimumSize(400, 400)
 
         right_splitter = QSplitter(Qt.Vertical)
@@ -139,3 +143,28 @@ class MainWindow(QMainWindow):
             else:
                 self.preview_view.scene().clear()
                 self.statusBar().showMessage("❌ 読み込み失敗", 3000)
+                
+    def open_image_via_dialog(self):
+        # 初期ディレクトリ = ユーザーの「ピクチャ」フォルダ
+        default_dir = QStandardPaths.writableLocation(QStandardPaths.PicturesLocation)
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "画像ファイルを選択",
+            default_dir,
+            "Images (*.jpg *.jpeg *.png)"
+        )
+
+        if not file_path:
+            return
+
+        # 現在の画像リストを上書き
+        self.image_paths = [file_path]
+        self.current_index = 0
+        self.thumbnail_list.clear()
+
+        icon = QIcon(load_pixmap(file_path))
+        item = QListWidgetItem(icon, os.path.basename(file_path))
+        self.thumbnail_list.addItem(item)
+
+        self.display_image_by_index(0)                

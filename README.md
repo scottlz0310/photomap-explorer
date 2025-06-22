@@ -19,7 +19,7 @@ Exif 情報を解析して、Leaflet.js ベースの地図にピンを立てて�
 
 画像内のGPS情報を地図にマッピング：
 
-![スクリーンショット](docs/screenshot_dingle.png)
+![スクリーンショット](docs/screenshot_dingle.jpg)
 
 ---
 

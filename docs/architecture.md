@@ -20,6 +20,10 @@ This document outlines the overall structure and modular design of the PhotoMap 
 
 ## 🧱 Module Structure | モジュール構成
 
+-V1.0時点
+photomap_explorer/ │ ├── main.py ← エントリーポイント ├── main_window.py ← MainWindowの統括（最低限） │ ├── ui/ │ ├── __init__.py │ ├── image_preview.py ← ImagePreviewView クラス │ ├── folder_browser.py ← QTreeView/Model の構成や選択処理 │ ├── thumbnail_list.py ← QListWidget サムネイル処理 │ ├── map_view.py ← QWebEngineView の地図ビュー管理 │ └── controls.py ← アドレスバー・ボタンのUI部品 │ ├── logic/ │ ├── __init__.py │ ├── image_loader.py │ ├── gps_parser.py │ └── map_generator.py │ └── assets/ └── pme.ico
+
+-将来を含むが再構成必要
 photomap-explorer/ ├── main_app.py # App launcher and Qt main window | メインウィンドウ起動部 ├── ui_mainwindow.py # UI layout via Qt Designer or manual setup | UI レイアウト定義 ├── folder_browser.py # Local folder selection | フォルダ選択ダイアログ処理 ├── thumbnail_loader.py # Thumbnail generation & display | サムネイル生成と一覧表示 ├── exif_parser.py # Extract EXIF GPS/Date info | EXIF 情報の抽出（緯度経度・撮影日時） ├── map_embedder.py # Leaflet map HTML generation | Leaflet.js を使った地図HTML生成 ├── image_viewer.py # Full preview + metadata panel | プレビュー表示 + メタ情報パネル ├── utils/ │ └── coordinate_converter.py # DMS → decimal latitude/longitude | 度分秒から十進法への変換処理 ├── resources/ │ └── map_template.html # HTML template for embedded maps | Leaflet埋め込み用テンプレート └── docs/, README.md, requirements.txt
 
 

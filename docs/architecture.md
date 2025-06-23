@@ -65,16 +65,7 @@ photomap-explorer/ ├── main_app.py # App launcher and Qt main window | メ
 
 ## 🚧 Future Plans | 今後の拡張予定
 
-- Multi-photo clustering on map  
-  地図上での複数写真クラスタリング対応  
-- Map export with overlays  
-  写真付きマップ表示のエクスポート機能  
-- Cloud storage integration (e.g. OneDrive, Fileforce)  
-  OneDrive や Fileforce との連携処理モジュール化  
-- Image filtering by date, tag, location  
-  撮影日・タグ・位置情報による絞り込み機能  
 
----
 
 If you'd like to contribute or suggest improvements, see the repository:  
 改善提案・参加にご興味があれば、以下のリポジトリをご覧ください：  

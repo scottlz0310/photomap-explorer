@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QSize, QDir
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QStandardPaths
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
 from apps.logic.gps_parser import extract_gps_coords
@@ -58,11 +57,10 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         self.folder_model = QFileSystemModel()
-        self.folder_model.setRootPath(QDir.rootPath())
+        self.folder_model.setRootPath("")  # 全ドライブのルートを設定
 
         self.folder_view = QTreeView()
         self.folder_view.setModel(self.folder_model)
-        self.folder_view.setRootIndex(self.folder_model.index(QDir.rootPath()))
         self.folder_view.setHeaderHidden(True)
         self.folder_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.folder_view.setTextElideMode(Qt.ElideNone)
@@ -106,9 +104,6 @@ class MainWindow(QMainWindow):
 
     def on_folder_selected(self, index):
         dir_path = self.folder_model.filePath(index)
-        if not os.access(dir_path, os.R_OK):
-            self.statusBar().showMessage("❌ アクセス不可: " + dir_path, 3000)
-            return
         if os.path.isdir(dir_path):
             self.load_images_from_directory(dir_path)
             self.folder_view.resizeColumnToContents(0)
@@ -140,7 +135,7 @@ class MainWindow(QMainWindow):
                 self.map_view.setHtml(html)
             else:
                 self.preview_view.scene().clear()
-                self.statusBar().showMessage("❌ 画像の読み込みに失敗: " + self.image_paths[index], 5000)
+                self.statusBar().showMessage("❌ 画像の読み込みに失敗", 3000)
 
     def open_image_via_dialog(self):
         default_dir = QDir.rootPath()

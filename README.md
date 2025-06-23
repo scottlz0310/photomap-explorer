@@ -75,20 +75,28 @@ python run.py
 ## 📁 ディレクトリ構成
 
 ```
-photomap-explorer/
-├── apps/
-│   ├── logic/
-│   │   ├── gps_parser.py
-│   │   └── map_generator.py
-│   └── ui/
-│       └── main_window.py
-├── assets/
-├── docs/
-│   └── screenshot_dingle.png
-├── run.py
-├── requirements.txt
-├── .gitignore
-└── README.md
+photomap_explorer/
+├── main.py                # エントリーポイント
+├── main_window.py         # MainWindowの統括（最低限）
+├── README.md
+├── requirements.txt       # 依存ライブラリ一覧
+│
+├── ui/                    # UI関連モジュール
+│   ├── __init__.py
+│   ├── image_preview.py   # ImagePreviewView クラス
+│   ├── folder_browser.py  # QTreeView/Model の構成や選択処理
+│   ├── thumbnail_list.py  # QListWidget サムネイル処理
+│   ├── map_view.py        # QWebEngineView の地図ビュー管理
+│   └── controls.py        # アドレスバー・ボタンのUI部品
+│
+├── logic/                 # ロジック関連
+│   ├── __init__.py
+│   ├── image_loader.py
+│   ├── gps_parser.py
+│   └── map_generator.py
+│
+└── assets/                # アセット
+    └── pme.ico
 ```
 
 ---

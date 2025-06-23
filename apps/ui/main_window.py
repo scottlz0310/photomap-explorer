@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QFileSystemModel, QTreeView,
     QListWidget, QListWidgetItem, QGraphicsView, QGraphicsScene,
     QGraphicsPixmapItem, QPushButton, QSplitter, QStatusBar, QHeaderView,
-    QFileDialog
+    QLineEdit, QFileDialog
 )
 from PyQt5.QtCore import Qt, QSize, QDir
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
@@ -85,6 +85,11 @@ class MainWindow(QMainWindow):
         self.map_view.setHtml("<html><body><p>🗺️ 地図ビュー</p></body></html>")
         self.map_view.setMinimumSize(400, 400)
 
+        # アドレスバーの追加
+        self.address_bar = QLineEdit()
+        self.address_bar.setPlaceholderText("フォルダパスを入力してEnterを押してください")
+        self.address_bar.returnPressed.connect(self.on_address_entered)
+
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(self.preview_view)
         right_splitter.addWidget(self.map_view)
@@ -97,10 +102,20 @@ class MainWindow(QMainWindow):
 
         main_widget = QWidget()
         layout = QVBoxLayout(main_widget)
+        layout.addWidget(self.address_bar)  # アドレスバーをUIに追加
         layout.addWidget(top_splitter)
         self.setCentralWidget(main_widget)
 
         self.setStatusBar(QStatusBar())
+
+    def on_address_entered(self):
+        folder_path = self.address_bar.text()
+        if os.path.isdir(folder_path):
+            self.folder_view.setRootIndex(self.folder_model.index(folder_path))
+            self.load_images_from_directory(folder_path)
+            self.statusBar().showMessage(f"移動しました: {folder_path}", 3000)
+        else:
+            self.statusBar().showMessage("❌ フォルダが見つかりません", 3000)
 
     def on_folder_selected(self, index):
         dir_path = self.folder_model.filePath(index)

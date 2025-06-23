@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ### 4. アプリを起動
 
 ```bash
-python run.py
+python main.py
 ```
 
 画像ファイルを選択すると、自動でGPS位置が取得され、地図上にピンが表示されます。
@@ -106,7 +106,7 @@ photomap_explorer/
 - GPS 情報のない画像は地図には表示されません（ただしアプリは正常動作）
 - 一部のスマートフォン画像では位置情報が非標準形式で保存されており、読み取れない場合があります
 - 現在は 1 枚ずつの表示に対応（将来的にはバッチ処理や複数ピンにも対応予定）
-- 更新予定は　docs/ui-mock.md　を参照
+- 更新予定は　docs/Pending_features.md　を参照
 
 ---
 

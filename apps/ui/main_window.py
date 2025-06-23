@@ -2,17 +2,15 @@ import os
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QFileSystemModel, QTreeView,
     QListWidget, QListWidgetItem, QGraphicsView, QGraphicsScene,
-    QGraphicsPixmapItem, QPushButton, QSplitter, QStatusBar, QHeaderView
+    QGraphicsPixmapItem, QPushButton, QSplitter, QStatusBar, QHeaderView,
+    QFileDialog
 )
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QDir
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QStandardPaths
-from PyQt5.QtWidgets import QFileDialog
-
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
-
 from apps.logic.gps_parser import extract_gps_coords
 from apps.logic.map_generator import generate_map_html
 
@@ -60,11 +58,11 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         self.folder_model = QFileSystemModel()
-        self.folder_model.setRootPath("")
+        self.folder_model.setRootPath(QDir.rootPath())
 
         self.folder_view = QTreeView()
         self.folder_view.setModel(self.folder_model)
-        self.folder_view.setRootIndex(self.folder_model.index(self.get_home_dir()))
+        self.folder_view.setRootIndex(self.folder_model.index(QDir.rootPath()))
         self.folder_view.setHeaderHidden(True)
         self.folder_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.folder_view.setTextElideMode(Qt.ElideNone)
@@ -108,6 +106,9 @@ class MainWindow(QMainWindow):
 
     def on_folder_selected(self, index):
         dir_path = self.folder_model.filePath(index)
+        if not os.access(dir_path, os.R_OK):
+            self.statusBar().showMessage("❌ アクセス不可: " + dir_path, 3000)
+            return
         if os.path.isdir(dir_path):
             self.load_images_from_directory(dir_path)
             self.folder_view.resizeColumnToContents(0)
@@ -127,7 +128,6 @@ class MainWindow(QMainWindow):
         index = self.thumbnail_list.row(item)
         self.display_image_by_index(index)
 
-
     def display_image_by_index(self, index):
         if 0 <= index < len(self.image_paths):
             self.current_index = index
@@ -135,18 +135,15 @@ class MainWindow(QMainWindow):
             if not pixmap.isNull():
                 self.preview_view.set_image(pixmap)
 
-                # 📍 地図連携：Exifから座標 → HTML生成 → 表示
                 coords = extract_gps_coords(self.image_paths[index])
                 html = generate_map_html(coords)
                 self.map_view.setHtml(html)
-
             else:
                 self.preview_view.scene().clear()
-                self.statusBar().showMessage("❌ 読み込み失敗", 3000)
-                
+                self.statusBar().showMessage("❌ 画像の読み込みに失敗: " + self.image_paths[index], 5000)
+
     def open_image_via_dialog(self):
-        # 初期ディレクトリ = ユーザーの「ピクチャ」フォルダ
-        default_dir = QStandardPaths.writableLocation(QStandardPaths.PicturesLocation)
+        default_dir = QDir.rootPath()
 
         file_path, _ = QFileDialog.getOpenFileName(
             self,
@@ -158,7 +155,6 @@ class MainWindow(QMainWindow):
         if not file_path:
             return
 
-        # 現在の画像リストを上書き
         self.image_paths = [file_path]
         self.current_index = 0
         self.thumbnail_list.clear()
@@ -167,4 +163,4 @@ class MainWindow(QMainWindow):
         item = QListWidgetItem(icon, os.path.basename(file_path))
         self.thumbnail_list.addItem(item)
 
-        self.display_image_by_index(0)                
+        self.display_image_by_index(0)

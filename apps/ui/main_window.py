@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QSize, QDir
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWidgets import QHBoxLayout
 
 from apps.logic.image_loader import find_images_in_directory, load_pixmap
 from apps.logic.gps_parser import extract_gps_coords
@@ -85,10 +86,18 @@ class MainWindow(QMainWindow):
         self.map_view.setHtml("<html><body><p>🗺️ 地図ビュー</p></body></html>")
         self.map_view.setMinimumSize(400, 400)
 
-        # アドレスバーの追加
+        # アドレスバーと全ドライブボタンの横並びレイアウト
+        address_layout = QHBoxLayout()
         self.address_bar = QLineEdit()
         self.address_bar.setPlaceholderText("フォルダパスを入力してEnterを押してください")
         self.address_bar.returnPressed.connect(self.on_address_entered)
+
+        self.return_to_root_button = QPushButton("⤴")  # 小さなボタン
+        self.return_to_root_button.setFixedSize(30, 30)  # ボタンサイズを調整
+        self.return_to_root_button.clicked.connect(self.on_return_to_root)
+
+        address_layout.addWidget(self.address_bar)
+        address_layout.addWidget(self.return_to_root_button)
 
         right_splitter = QSplitter(Qt.Vertical)
         right_splitter.addWidget(self.preview_view)
@@ -102,7 +111,7 @@ class MainWindow(QMainWindow):
 
         main_widget = QWidget()
         layout = QVBoxLayout(main_widget)
-        layout.addWidget(self.address_bar)  # アドレスバーをUIに追加
+        layout.addLayout(address_layout)  # アドレスバーとボタンを追加
         layout.addWidget(top_splitter)
         self.setCentralWidget(main_widget)
 
@@ -116,6 +125,10 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"移動しました: {folder_path}", 3000)
         else:
             self.statusBar().showMessage("❌ フォルダが見つかりません", 3000)
+
+    def on_return_to_root(self):
+        self.folder_view.setRootIndex(self.folder_model.index(""))  # 空文字列で完全ルート
+        self.statusBar().showMessage("全ドライブ選択に戻りました", 3000)
 
     def on_folder_selected(self, index):
         dir_path = self.folder_model.filePath(index)

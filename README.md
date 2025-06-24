@@ -1,5 +1,5 @@
 📍 GPS付き画像から、撮影地点を地図に自動表示する軽量ツール  
-Exif 情報を解析して、Leaflet.js ベースの地図にピンを立てて視覚化します。
+Exif 情報を解析して、PyQtWebEngine ベースの地図にピンを立てて視覚化します。
 単なる画像ビューワーとしても使えます。
 
 ---
@@ -7,10 +7,10 @@ Exif 情報を解析して、Leaflet.js ベースの地図にピンを立てて�
 ## ✨ 特徴
 
 - Exif に埋め込まれた GPS 情報を抽出（緯度・経度）
-- Leaflet.js によりインタラクティブな地図を HTML 表示
+- PyQtWebEngine によりインタラクティブな地図を HTML 表示
 - PyQt5 GUI により、画像 + 地図ビューアを直感的に操作可能
 - 前後の画像履歴ナビゲーション（フォルダ内自動検出）
-- GPS情報がない画像も gracefully スキップ処理
+- GPS情報がない画像 Null Island へスキップ処理
 - シンプルかつ高速なファイル単体処理
 
 ---
@@ -36,8 +36,11 @@ python -m venv venv
 ### 2. 仮想環境を有効化
 
 - Windows:
-  ```bash
+  ```pwsh
   venv\Scripts\activate
+  ```
+  ```bash
+  source venv\Scripts\activate
   ```
 
 - macOS / Linux:
@@ -54,7 +57,7 @@ pip install -r requirements.txt
 ### 4. アプリを起動
 
 ```bash
-python run.py
+python main.py
 ```
 
 画像ファイルを選択すると、自動でGPS位置が取得され、地図上にピンが表示されます。
@@ -64,31 +67,39 @@ python run.py
 ## 📦 主な依存ライブラリ
 
 | ライブラリ | 用途 |
-|------------|------|
-| PyQt5      | GUI表示 |
-| Pillow     | Exifデータの抽出 |
-| jinja2     | HTMLテンプレートの生成 |
-| Leaflet.js | 地図の描画（CDN経由で読み込み） |
-
+|--------------|------|
+| PyQt5        | GUI表示 |
+| PyQtWebEngine| 地図の描画
+| Pillow       | Exifデータの抽出 |
+| jinja2       | HTMLテンプレートの生成 |
+| exifread     | exifデータの抽出
 ---
 
 ## 📁 ディレクトリ構成
 
 ```
 photomap-explorer/
-├── apps/
-│   ├── logic/
-│   │   ├── gps_parser.py
-│   │   └── map_generator.py
-│   └── ui/
-│       └── main_window.py
-├── assets/
-├── docs/
-│   └── screenshot_dingle.png
-├── run.py
-├── requirements.txt
-├── .gitignore
-└── README.md
+├── LICENSE               # ライセンスファイル
+├── README.md             # プロジェクト説明文
+├── requirements.txt      # 必要な依存関係のリスト
+├── main.py               # プログラムのエントリーポイント
+├── main_window.py        # MainWindowの統括
+├── logic/                # 核心的な処理ロジック
+│   ├── __init__.py
+│   ├── gps_parser.py     # GPSデータの解析
+│   ├── image_loader.py   # 画像読み込み処理
+│   ├── map_generator.py  # 地図の生成ロジック
+│
+├── ui/                   # ユーザーインターフェース関連
+│   ├── __init__.py
+│   ├── folder_browser.py # フォルダー選択ビュー
+│   ├── image_preview.py  # プレビュー画面
+│   ├── map_view.py       # 地図のビュー
+│   ├── thumbnail_list.py # サムネイルリスト管理
+│   └── controls.py       # ボタンやアドレスバーのコントロール
+│
+└── assets/               # 静的ファイル
+    └── pme.ico           # アイコンファイル
 ```
 
 ---
@@ -98,7 +109,7 @@ photomap-explorer/
 - GPS 情報のない画像は地図には表示されません（ただしアプリは正常動作）
 - 一部のスマートフォン画像では位置情報が非標準形式で保存されており、読み取れない場合があります
 - 現在は 1 枚ずつの表示に対応（将来的にはバッチ処理や複数ピンにも対応予定）
-- 更新予定は　docs/ui-mock.md　を参照
+- 更新予定は　docs/Pending_features.md　を参照
 
 ---
 

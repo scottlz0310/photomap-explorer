@@ -67,39 +67,39 @@ python main.py
 ## 📦 主な依存ライブラリ
 
 | ライブラリ | 用途 |
-|------------|------|
-| PyQt5      | GUI表示 |
-| Pillow     | Exifデータの抽出 |
-| jinja2     | HTMLテンプレートの生成 |
-| Leaflet.js | 地図の描画（CDN経由で読み込み） |
-
+|--------------|------|
+| PyQt5        | GUI表示 |
+| PyQtWebEngine| 地図の描画
+| Pillow       | Exifデータの抽出 |
+| jinja2       | HTMLテンプレートの生成 |
+| exifread     | exifデータの抽出
 ---
 
 ## 📁 ディレクトリ構成
 
 ```
-photomap_explorer/
-├── main.py                # エントリーポイント
-├── main_window.py         # MainWindowの統括（最低限）
-├── README.md
-├── requirements.txt       # 依存ライブラリ一覧
-│
-├── ui/                    # UI関連モジュール
+photomap-explorer/
+├── LICENSE               # ライセンスファイル
+├── README.md             # プロジェクト説明文
+├── requirements.txt      # 必要な依存関係のリスト
+├── main.py               # プログラムのエントリーポイント
+├── main_window.py        # インターフェイスの初期化
+├── core/                 # 核心的な処理ロジック
 │   ├── __init__.py
-│   ├── image_preview.py   # ImagePreviewView クラス
-│   ├── folder_browser.py  # QTreeView/Model の構成や選択処理
-│   ├── thumbnail_list.py  # QListWidget サムネイル処理
-│   ├── map_view.py        # QWebEngineView の地図ビュー管理
-│   └── controls.py        # アドレスバー・ボタンのUI部品
+│   ├── gps_parser.py     # GPSデータの解析
+│   ├── image_loader.py   # 画像読み込み処理
+│   ├── map_generator.py  # 地図の生成ロジック
 │
-├── logic/                 # ロジック関連
+├── ui/                   # ユーザーインターフェース関連
 │   ├── __init__.py
-│   ├── image_loader.py
-│   ├── gps_parser.py
-│   └── map_generator.py
+│   ├── folder_browser.py # フォルダー選択ビュー
+│   ├── image_preview.py  # プレビュー画面
+│   ├── map_view.py       # 地図のビュー
+│   ├── thumbnail_list.py # サムネイルリスト管理
+│   └── controls.py       # ボタンやアドレスバーのコントロール
 │
-└── assets/                # アセット
-    └── pme.ico
+└── assets/               # 静的ファイル
+    └── pme.ico           # アイコンファイル
 ```
 
 ---

@@ -10,6 +10,7 @@ venv/
 .DS_Store
 *.swp
 *.ini
+*.html
 
 # その他除外したい一時ファイル
 *.log

@@ -28,6 +28,9 @@ def create_controls(address_entered_callback, return_to_root_callback):
     layout = QHBoxLayout(controls_widget)
     layout.addWidget(address_bar)
     layout.addWidget(return_to_root_button)
-    layout.setContentsMargins(0, 0, 0, 0)  # マージンを省略してスッキリと表示
 
+    # マージンを設定
+    layout.setContentsMargins(5, 5, 5, 5)  # 余白を調整
+    layout.setSpacing(5)  # ウィジェット間のスペースを調整
+    
     return controls_widget, address_bar, return_to_root_button

@@ -36,8 +36,11 @@ python -m venv venv
 ### 2. 仮想環境を有効化
 
 - Windows:
-  ```bash
+  ```pwsh
   venv\Scripts\activate
+  ```
+  ```bash
+  source venv\Scripts\activate
   ```
 
 - macOS / Linux:

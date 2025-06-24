@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QTreeView
 from PyQt5.QtCore import QDir
 from PyQt5.QtWidgets import QFileSystemModel
+from PyQt5.QtCore import Qt
+
 
 def create_folder_view(folder_selected_callback):
     """フォルダビューを作成して初期化する関数"""

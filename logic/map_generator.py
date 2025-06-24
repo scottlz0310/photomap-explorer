@@ -14,9 +14,9 @@ TEMPLATE_HTML = """
     <div id="map" style="width: 100%; height: 100vh;"></div>
     <script>
         var map = L.map('map').setView([LATITUDE, LONGITUDE], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {{
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-        }}).addTo(map);
+        }).addTo(map);
         L.marker([LATITUDE, LONGITUDE]).addTo(map)
             .bindPopup('Location: [LATITUDE, LONGITUDE]')
             .openPopup();
@@ -46,5 +46,4 @@ def generate_map_html(latitude, longitude, output_path="map.html"):
     # HTMLファイルとして保存
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)
-    print(f"地図HTMLが生成されました: {os.path.abspath(output_path)}")
     return os.path.abspath(output_path)

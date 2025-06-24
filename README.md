@@ -84,7 +84,7 @@ photomap-explorer/
 ├── requirements.txt      # 必要な依存関係のリスト
 ├── main.py               # プログラムのエントリーポイント
 ├── main_window.py        # MainWindowの統括
-├── logic/                 # 核心的な処理ロジック
+├── logic/                # 核心的な処理ロジック
 │   ├── __init__.py
 │   ├── gps_parser.py     # GPSデータの解析
 │   ├── image_loader.py   # 画像読み込み処理

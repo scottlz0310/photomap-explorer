@@ -83,7 +83,7 @@ photomap-explorer/
 ├── README.md             # プロジェクト説明文
 ├── requirements.txt      # 必要な依存関係のリスト
 ├── main.py               # プログラムのエントリーポイント
-├── main_window.py        # インターフェイスの初期化
+├── main_window.py        # MainWindowの統括
 ├── core/                 # 核心的な処理ロジック
 │   ├── __init__.py
 │   ├── gps_parser.py     # GPSデータの解析

@@ -1,0 +1,104 @@
+## 新構成 - ファイルごとの中身（続き）
+
+### logic/image_utils.py
+```python
+from PyQt5.QtGui import QPixmap
+from PIL import Image, ExifTags
+import os
+import folium
+
+def load_pixmap(image_path):
+    return QPixmap(image_path)
+
+def find_images_in_directory(folder_path):
+    valid_extensions = (".jpg", ".jpeg", ".png", ".bmp", ".gif")
+    image_paths = []
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.lower().endswith(valid_extensions):
+                image_paths.append(os.path.join(root, file))
+    return image_paths
+
+def extract_gps_coords(image_path):
+    try:
+        img = Image.open(image_path)
+        exif_data = img._getexif()
+        if not exif_data:
+            return None
+
+        gps_info = {}
+        for tag, value in exif_data.items():
+            decoded = ExifTags.TAGS.get(tag)
+            if decoded == "GPSInfo":
+                for t in value:
+                    sub_decoded = ExifTags.GPSTAGS.get(t)
+                    gps_info[sub_decoded] = value[t]
+
+        if not gps_info:
+            return None
+
+        def convert_to_degrees(value):
+            d, m, s = value
+            return d[0] / d[1] + m[0] / m[1] / 60 + s[0] / s[1] / 3600
+
+        lat = convert_to_degrees(gps_info["GPSLatitude"])
+        if gps_info.get("GPSLatitudeRef") != "N":
+            lat = -lat
+
+        lon = convert_to_degrees(gps_info["GPSLongitude"])
+        if gps_info.get("GPSLongitudeRef") != "E":
+            lon = -lon
+
+        return {"latitude": lat, "longitude": lon}
+
+    except Exception:
+        return None
+
+def generate_map_html(lat, lon):
+    map_obj = folium.Map(location=[lat, lon], zoom_start=15)
+    folium.Marker([lat, lon], tooltip="画像の位置").add_to(map_obj)
+    output_path = os.path.abspath("map.html")
+    map_obj.save(output_path)
+    return output_path
+```
+
+---
+
+### logic/folder_utils.py（シンプルな場合の例）
+```python
+# 今回は find_images_in_directory が image_utils に含まれるので不要、分割するならここに移しても良い
+```
+
+---
+
+### ui/controls.py（既存のまま使える場合）
+```python
+from PyQt5.QtWidgets import QLineEdit, QPushButton, QWidget, QHBoxLayout
+
+def create_controls(on_address_entered, on_return_to_root):
+    address_bar = QLineEdit()
+    address_bar.returnPressed.connect(on_address_entered)
+
+    return_to_root_button = QPushButton("全ドライブへ")
+    return_to_root_button.clicked.connect(on_return_to_root)
+
+    layout = QHBoxLayout()
+    layout.addWidget(address_bar)
+    layout.addWidget(return_to_root_button)
+
+    controls_widget = QWidget()
+    controls_widget.setLayout(layout)
+
+    return controls_widget, address_bar, return_to_root_button
+```
+
+---
+
+## ✅ これで主要構成は一通り完成です。
+
+さらに以下も必要なら作成できます：
+- tests/ 以下に簡易テストコード
+- README の更新案
+- setup.py や pyproject.toml の整備案
+
+ご希望あればそのまま続けて書きますので「必要なら次も」と言ってください。

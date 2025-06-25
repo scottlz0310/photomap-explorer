@@ -1,0 +1,232 @@
+## 新構成 - ファイルごとの中身
+
+### main.py
+```python
+import sys
+from PyQt5.QtWidgets import QApplication
+from main_window import MainWindow
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
+```
+
+---
+
+### main_window.py
+```python
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar
+from ui.folder_panel import FolderPanel
+from ui.thumbnail_panel import ThumbnailPanel
+from ui.preview_panel import PreviewPanel
+from ui.map_panel import MapPanel
+from ui.controls import create_controls
+from logic.image_utils import find_images_in_directory, load_pixmap, extract_gps_coords, generate_map_html
+from PyQt5.QtCore import Qt, QUrl, QSize
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QListWidgetItem
+import os
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("PhotoMap Explorer")
+        self.setGeometry(100, 100, 1400, 900)
+        self.image_paths = []
+
+        self.folder_panel = FolderPanel(self.on_folder_selected)
+        self.thumbnail_panel = ThumbnailPanel(self.on_thumbnail_clicked, self.set_thumbnail_size_and_width)
+        self.preview_panel = PreviewPanel()
+        self.map_panel = MapPanel()
+
+        controls_widget, self.address_bar, self.return_to_root_button = create_controls(
+            self.on_address_entered, self.on_return_to_root
+        )
+
+        self.middle_splitter = QSplitter(Qt.Vertical)
+        self.middle_splitter.addWidget(self.thumbnail_panel)
+
+        self.right_splitter = QSplitter(Qt.Vertical)
+        self.right_splitter.addWidget(self.preview_panel)
+        self.right_splitter.addWidget(self.map_panel)
+
+        self.main_splitter = QSplitter()
+        self.main_splitter.addWidget(self.folder_panel)
+        self.main_splitter.addWidget(self.middle_splitter)
+        self.main_splitter.addWidget(self.right_splitter)
+        self.main_splitter.setSizes([300, 200, 900])
+
+        layout = QVBoxLayout()
+        layout.addWidget(controls_widget)
+        layout.addWidget(self.main_splitter)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+        self.setStatusBar(QStatusBar())
+
+        self.set_thumbnail_size_and_width('medium')
+
+    def set_thumbnail_size_and_width(self, size_label):
+        size_map = {
+            'small': (QSize(64, 64), 64 + 60),
+            'medium': (QSize(128, 128), 128 + 60),
+            'large': (QSize(192, 192), 192 + 60)
+        }
+        size, width = size_map.get(size_label, (QSize(128, 128), 188))
+        self.thumbnail_panel.set_icon_size(size)
+        self.main_splitter.setSizes([300, width, 900])
+
+    def on_folder_selected(self, index):
+        path = self.folder_panel.get_path(index)
+        if os.path.isdir(path):
+            self.image_paths = find_images_in_directory(path)
+            self.thumbnail_panel.update_list(self.image_paths)
+            if self.image_paths:
+                self.show_image_and_map(self.image_paths[0])
+        elif os.path.isfile(path):
+            dir_path = os.path.dirname(path)
+            self.image_paths = find_images_in_directory(dir_path)
+            self.thumbnail_panel.update_list(self.image_paths)
+            if path in self.image_paths:
+                self.show_image_and_map(path)
+
+    def on_thumbnail_clicked(self, image_path):
+        self.show_image_and_map(image_path)
+
+    def show_image_and_map(self, image_path):
+        pixmap = QPixmap(image_path)
+        if not pixmap.isNull():
+            self.preview_panel.set_image(pixmap)
+
+        gps_info = extract_gps_coords(image_path)
+        lat, lon = gps_info["latitude"], gps_info["longitude"] if gps_info else (0.0, 0.0)
+
+        map_file = generate_map_html(lat, lon)
+        self.map_panel.load_map(map_file)
+
+    def on_address_entered(self):
+        folder_path = self.address_bar.text()
+        if folder_path:
+            self.folder_panel.set_root(folder_path)
+            self.image_paths = find_images_in_directory(folder_path)
+            self.thumbnail_panel.update_list(self.image_paths)
+
+    def on_return_to_root(self):
+        self.folder_panel.set_root("")
+        self.statusBar().showMessage("全ドライブに戻りました", 3000)
+```
+
+---
+
+### ui/folder_panel.py
+```python
+from PyQt5.QtWidgets import QTreeView, QHeaderView
+from ui.folder_browser import create_folder_view
+from PyQt5.QtCore import Qt
+
+class FolderPanel(QTreeView):
+    def __init__(self, on_folder_selected):
+        super().__init__()
+        view = create_folder_view(on_folder_selected)
+        self.setModel(view.model())
+        self.setTextElideMode(Qt.ElideNone)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.header().setSectionResizeMode(1, QHeaderView.Interactive)
+        self.header().setSectionResizeMode(2, QHeaderView.Interactive)
+        self.setColumnWidth(0, 300)
+        self.setColumnWidth(1, 100)
+        self.setColumnWidth(2, 150)
+
+    def get_path(self, index):
+        return self.model().filePath(index)
+
+    def set_root(self, path):
+        self.setRootIndex(self.model().index(path))
+```
+
+---
+
+### ui/thumbnail_panel.py
+```python
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QListWidget, QListWidgetItem, QHBoxLayout, QLabel, QRadioButton, QButtonGroup
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon
+from ui.thumbnail_list import load_pixmap
+import os
+
+class ThumbnailPanel(QWidget):
+    def __init__(self, on_thumbnail_clicked, on_size_changed):
+        super().__init__()
+        self.on_thumbnail_clicked = on_thumbnail_clicked
+        self.list_widget = QListWidget()
+        self.list_widget.itemClicked.connect(self._item_clicked)
+
+        radio_layout = QHBoxLayout()
+        self.button_group = QButtonGroup()
+
+        for label, size in [("小", "small"), ("中", "medium"), ("大", "large")]:
+            btn = QRadioButton(label)
+            self.button_group.addButton(btn)
+            radio_layout.addWidget(btn)
+            btn.toggled.connect(lambda checked, s=size: checked and on_size_changed(s))
+
+        radio_label = QLabel("サムネイルサイズの変更")
+        radio_wrapper = QWidget()
+        radio_vlayout = QVBoxLayout(radio_wrapper)
+        radio_vlayout.addWidget(radio_label)
+        radio_vlayout.addLayout(radio_layout)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.list_widget)
+        layout.addWidget(radio_wrapper)
+
+    def update_list(self, image_paths):
+        self.list_widget.clear()
+        for path in image_paths:
+            icon = QIcon(load_pixmap(path))
+            item = QListWidgetItem(icon, os.path.basename(path))
+            self.list_widget.addItem(item)
+
+    def _item_clicked(self, item):
+        index = self.list_widget.row(item)
+        image_path = self.list_widget.item(index).text()
+        self.on_thumbnail_clicked(image_path)
+
+    def set_icon_size(self, size):
+        self.list_widget.setIconSize(size)
+```
+
+---
+
+### ui/preview_panel.py
+```python
+from ui.image_preview import ImagePreviewView
+
+class PreviewPanel(ImagePreviewView):
+    def __init__(self):
+        super().__init__()
+        self.setMinimumHeight(200)
+```
+
+---
+
+### ui/map_panel.py
+```python
+from ui.map_view import create_map_view
+from PyQt5.QtCore import QUrl
+
+class MapPanel:
+    def __init__(self):
+        self.view = create_map_view()
+        self.view.setMinimumHeight(200)
+
+    def load_map(self, map_file):
+        self.view.load(QUrl.fromLocalFile(map_file))
+```
+
+---
+
+この構成で、責務が整理され、可読性と保守性が大幅に向上します。

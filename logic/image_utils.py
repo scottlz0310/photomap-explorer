@@ -1,0 +1,55 @@
+from PyQt5.QtGui import QPixmap
+from PIL import Image, ExifTags
+import os
+import folium
+import exifread
+
+def load_pixmap(image_path):
+    return QPixmap(image_path)
+
+def find_images_in_directory(folder_path):
+    valid_extensions = (".jpg", ".jpeg", ".png", ".bmp", ".gif")
+    image_paths = []
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.lower().endswith(valid_extensions):
+                image_paths.append(os.path.abspath(os.path.join(root, file)))
+    return image_paths
+
+def extract_gps_coords(image_path):
+    try:
+        with open(image_path, 'rb') as f:
+            tags = exifread.process_file(f, details=False, strict=True)
+        if not tags:
+            return None
+
+        def get_if_exist(data, key):
+            return data.get(key)
+
+        def convert_to_degrees(value):
+            d, m, s = [float(x.num) / float(x.den) for x in value.values]
+            return d + (m / 60.0) + (s / 3600.0)
+
+        gps_latitude = get_if_exist(tags, 'GPS GPSLatitude')
+        gps_latitude_ref = get_if_exist(tags, 'GPS GPSLatitudeRef')
+        gps_longitude = get_if_exist(tags, 'GPS GPSLongitude')
+        gps_longitude_ref = get_if_exist(tags, 'GPS GPSLongitudeRef')
+
+        if gps_latitude and gps_latitude_ref and gps_longitude and gps_longitude_ref:
+            lat = convert_to_degrees(gps_latitude)
+            if gps_latitude_ref.values[0] != 'N':
+                lat = -lat
+            lon = convert_to_degrees(gps_longitude)
+            if gps_longitude_ref.values[0] != 'E':
+                lon = -lon
+            return {"latitude": lat, "longitude": lon}
+        return None
+    except Exception:
+        return None
+
+def generate_map_html(lat, lon):
+    map_obj = folium.Map(location=[lat, lon], zoom_start=15)
+    folium.Marker([lat, lon], tooltip="画像の位置").add_to(map_obj)
+    output_path = os.path.abspath("map.html")
+    map_obj.save(output_path)
+    return output_path

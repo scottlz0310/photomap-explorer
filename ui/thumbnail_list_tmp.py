@@ -1,10 +1,6 @@
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize
-
-def load_pixmap(image_path):
-    """画像パスからQPixmapを生成して返すユーティリティ関数"""
-    return QPixmap(image_path)
 
 def create_thumbnail_list(thumbnail_clicked_callback):
     """サムネイル一覧のウィジェットを作成して初期化する関数"""

@@ -189,3 +189,4 @@ class MainWindow(QMainWindow):
         for image_path in self.image_paths:
             icon = QIcon(load_pixmap(image_path))
             item = QListWidgetItem(icon, os.path.basename(image_path))
+            self.thumbnail_list.addItem(item)  # ← これを追加

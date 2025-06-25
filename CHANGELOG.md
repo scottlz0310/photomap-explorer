@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] - 2025-06-26
+
+### Added
+- アドレスバーで直接フォルダパスを入力し、画像リストを即時更新できる機能を追加
+- サムネイルのサイズ（大・中・小）を表示メニューから切り替え可能に
+- サムネイルサイズ変更時、中央ペイン幅の自動調整機能を追加
+
+### Changed
+- `main_window.py` を各UIパネルごとに分割し、可読性・保守性を大幅向上
+- 依存関係・ディレクトリ構成・セットアップ手順を `README.md` で最新化
+- `requirements.txt` から Pillow を除外し、必要最小限の依存パッケージに整理
+
+### Removed
+- `docs/architecture.md` を `README.md` に統合し、単独ファイルを削除
+
+---
+
 ## [1.0.0] - 2025-06-22
 
 ### Added

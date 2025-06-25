@@ -1,5 +1,4 @@
 PyQt5>=5.15.0
 PyQtWebEngine>=5.15.0
-Pillow>=8.0.0
 folium>=0.12.1
 exifread>=3.3.1

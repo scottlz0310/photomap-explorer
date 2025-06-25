@@ -1,17 +1,17 @@
-📍 GPS付き画像から、撮影地点を地図に自動表示する軽量ツール  
-Exif 情報を解析して、PyQtWebEngine ベースの地図にピンを立てて視覚化します。
-単なる画像ビューワーとしても使えます。
+📍 GPS付き画像から撮影地点を地図に自動表示する軽量ツール  
+Exif情報を解析し、PyQtWebEngineベースの地図にピンを立てて視覚化します。
 
 ---
 
 ## ✨ 特徴
 
-- Exif に埋め込まれた GPS 情報を抽出（緯度・経度）
-- PyQtWebEngine によりインタラクティブな地図を HTML 表示
-- PyQt5 GUI により、画像 + 地図ビューアを直感的に操作可能
-- 前後の画像履歴ナビゲーション（フォルダ内自動検出）
-- GPS情報がない画像 Null Island へスキップ処理
-- シンプルかつ高速なファイル単体処理
+- Exifに埋め込まれたGPS情報を抽出（緯度・経度）
+- PyQtWebEngineによるインタラクティブな地図HTML表示
+- PyQt5 GUIで画像＋地図ビューアを直感的に操作
+- フォルダ内の画像を自動検出し履歴ナビゲーション
+- GPS情報がない画像はNull Islandへスキップ
+- シンプルかつ高速な単体画像処理
+- コード分割で保守性・拡張性も向上
 
 ---
 
@@ -23,7 +23,7 @@ Exif 情報を解析して、PyQtWebEngine ベースの地図にピンを立て�
 
 ---
 
-## 🚀 セットアップと使い方（Usage）
+## 🚀 セットアップと使い方
 
 ### 1. クローン & 仮想環境の作成
 
@@ -42,7 +42,6 @@ python -m venv venv
   ```bash
   source venv\Scripts\activate
   ```
-
 - macOS / Linux:
   ```bash
   source venv/bin/activate
@@ -66,50 +65,54 @@ python main.py
 
 ## 📦 主な依存ライブラリ
 
-| ライブラリ | 用途 |
-|--------------|------|
-| PyQt5        | GUI表示 |
-| PyQtWebEngine| 地図の描画
-| Pillow       | Exifデータの抽出 |
-| jinja2       | HTMLテンプレートの生成 |
-| exifread     | exifデータの抽出
+| ライブラリ   | 用途             |
+|--------------|------------------|
+| PyQt5        | GUI表示          |
+| PyQtWebEngine| 地図の描画       |
+| folium       | 地図HTML生成     |
+| exifread     | Exifデータ抽出   |
+
 ---
 
-## 📁 ディレクトリ構成
+## 📁 ディレクトリ構成（分割後）
 
 ```
 photomap-explorer/
-├── LICENSE               # ライセンスファイル
-├── README.md             # プロジェクト説明文
-├── requirements.txt      # 必要な依存関係のリスト
-├── main.py               # プログラムのエントリーポイント
-├── main_window.py        # MainWindowの統括
-├── logic/                # 核心的な処理ロジック
-│   ├── __init__.py
-│   ├── gps_parser.py     # GPSデータの解析
-│   ├── image_loader.py   # 画像読み込み処理
-│   ├── map_generator.py  # 地図の生成ロジック
-│
-├── ui/                   # ユーザーインターフェース関連
-│   ├── __init__.py
-│   ├── folder_browser.py # フォルダー選択ビュー
-│   ├── image_preview.py  # プレビュー画面
-│   ├── map_view.py       # 地図のビュー
-│   ├── thumbnail_list.py # サムネイルリスト管理
-│   └── controls.py       # ボタンやアドレスバーのコントロール
-│
-└── assets/               # 静的ファイル
-    └── pme.ico           # アイコンファイル
+├── LICENSE                  #  ライセンスファイル
+├── README.md                #  プロジェクト説明・セットアップ手順
+├── requirements.txt         #  必要な依存ライブラリ一覧
+├── main.py                  #  アプリのエントリーポイント
+├── main_window.py           #  メインウィンドウの統括クラス
+├── logic/                   #  画像・GPS・地図関連のロジック
+│   └── image_utils.py       #  画像処理・GPS抽出・地図生成関数
+├── ui/                      #  ユーザーインターフェース部品
+│   ├── controls.py          #  アドレスバー・ボタン等のコントロール
+│   ├── folder_browser.py    #  フォルダ選択ビュー
+│   ├── folder_panel.py      #  フォルダパネル（ツリー表示）
+│   ├── image_preview.py     #  画像プレビュー表示
+│   ├── map_panel.py         #  地図パネル
+│   ├── map_view.py          #  地図ビュー
+│   ├── preview_panel.py     #  プレビューパネル
+│   ├── thumbnail_panel.py   #  サムネイルパネル
+│   └── thumbnail_list.py    #  サムネイルリスト管理
+├── assets/                  #  静的ファイル・アイコン等
+│   ├── pme.ico              #  アプリ用アイコン
+│   └── ...                  #  その他アセット
+├── docs/                    #  ドキュメント類
+│   ├── architecture.md      #  アーキテクチャ概要
+│   ├── CONTRIBUTING.md      #  コントリビュートガイド
+│   ├── Pending_features.md  #  開発予定・ToDo
+│   └── ...                  #  その他ドキュメント
 ```
 
 ---
 
-## ⚠️ 注意点・既知の制限・今後の開発予定
+## ⚠️ 注意点・今後の開発予定
 
-- GPS 情報のない画像は地図には表示されません（ただしアプリは正常動作）
-- 一部のスマートフォン画像では位置情報が非標準形式で保存されており、読み取れない場合があります
-- 現在は 1 枚ずつの表示に対応（将来的にはバッチ処理や複数ピンにも対応予定）
-- 更新予定は　docs/Pending_features.md　を参照
+- GPS情報のない画像は地図に表示されません（アプリは正常動作）
+- 一部スマートフォン画像は位置情報が非標準形式で保存されており、読み取れない場合があります
+- 現在は1枚ずつの表示に対応（将来的にバッチ処理や複数ピン対応も検討）
+- 詳細・進捗は docs/Pending_features.md を参照
 
 ---
 

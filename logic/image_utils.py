@@ -1,5 +1,4 @@
 from PyQt5.QtGui import QPixmap
-from PIL import Image, ExifTags
 import os
 import folium
 import exifread

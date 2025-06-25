@@ -30,7 +30,7 @@ Exif情報を解析し、PyQtWebEngineベースの地図にピンを立てて視
 
 画像内のGPS情報を地図にマッピング：
 
-![スクリーンショット](docs/screenshot_dingle.jpg)
+![スクリーンショット](docs/screenshot_london.jpg)
 
 ---
 

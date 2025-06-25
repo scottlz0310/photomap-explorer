@@ -19,3 +19,15 @@ def add_thumbnail(thumbnail_list, image_path):
     icon = QIcon(image_path)  # 画像をアイコンとして読み込み
     item = QListWidgetItem(icon, image_path.split("/")[-1])  # ファイル名を表示
     thumbnail_list.addItem(item)
+
+def set_thumbnail_size(thumbnail_list, size_label):
+    """サムネイルサイズを 'small', 'medium', 'large' で切り替え"""
+    size_map = {
+        'small': QSize(64, 64),
+        'medium': QSize(128, 128),
+        'large': QSize(192, 192)
+    }
+    size = size_map.get(size_label, QSize(128, 128))
+    thumbnail_list.setIconSize(size)
+    # サムネイルリストを再描画
+    thumbnail_list.update()

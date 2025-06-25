@@ -1,16 +1,15 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QListWidgetItem
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QListWidgetItem, QHBoxLayout, QRadioButton, QButtonGroup, QLabel
 from ui.image_preview import ImagePreviewView
 from ui.folder_browser import create_folder_view
-from ui.thumbnail_list import create_thumbnail_list
+from ui.thumbnail_list import create_thumbnail_list, set_thumbnail_size
 from ui.map_view import create_map_view
 from ui.controls import create_controls
 from logic import find_images_in_directory, load_pixmap, extract_gps_coords, generate_map_html
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl, QSize
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtGui import QIcon, QPixmap
 
 import os
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -40,6 +39,43 @@ class MainWindow(QMainWindow):
 
         self.thumbnail_list = create_thumbnail_list(self.on_thumbnail_clicked)
 
+        # ▼ サムネイルサイズ切替用ラベル＋ラジオボタン ▼
+        size_radio_layout = QHBoxLayout()
+        size_radio_layout.setContentsMargins(10, 5, 10, 5)
+        size_radio_layout.setSpacing(20)
+
+        self.size_button_group = QButtonGroup()
+        self.radio_small = QRadioButton("小")
+        self.radio_medium = QRadioButton("中")
+        self.radio_large = QRadioButton("大")
+        self.radio_medium.setChecked(True)  # デフォルト
+
+        self.size_button_group.addButton(self.radio_small)
+        self.size_button_group.addButton(self.radio_medium)
+        self.size_button_group.addButton(self.radio_large)
+
+        size_radio_layout.addWidget(self.radio_small)
+        size_radio_layout.addWidget(self.radio_medium)
+        size_radio_layout.addWidget(self.radio_large)
+
+        # ラベルを追加
+        size_label = QLabel("サムネイルサイズの変更")
+        size_label.setContentsMargins(0, 0, 0, 0)
+
+        size_radio_widget = QWidget()
+        size_radio_vlayout = QVBoxLayout(size_radio_widget)
+        size_radio_vlayout.setContentsMargins(0, 0, 0, 0)
+        size_radio_vlayout.setSpacing(5)
+        size_radio_vlayout.addWidget(size_label)
+        size_radio_vlayout.addLayout(size_radio_layout)
+        size_radio_widget.setFixedHeight(60)
+
+        # middle_splitterをインスタンス変数に
+        self.middle_splitter = QSplitter()
+        self.middle_splitter.setOrientation(Qt.Vertical)
+        self.middle_splitter.addWidget(self.thumbnail_list)
+        self.middle_splitter.addWidget(size_radio_widget)  # 下部にラベル＋ラジオボタンを追加
+
         self.map_view = create_map_view()
         self.map_view.setMinimumHeight(200)
 
@@ -62,12 +98,9 @@ class MainWindow(QMainWindow):
         self.right_splitter.setStretchFactor(1, 1)
         self.right_splitter.setSizes([5000, 5000])
 
-        middle_splitter = QSplitter()
-        middle_splitter.addWidget(self.thumbnail_list)
-
         self.main_splitter = QSplitter()
         self.main_splitter.addWidget(self.folder_view)
-        self.main_splitter.addWidget(middle_splitter)
+        self.main_splitter.addWidget(self.middle_splitter)
         self.main_splitter.addWidget(self.right_splitter)
         self.main_splitter.setSizes([300, 200, 900])
 
@@ -78,6 +111,25 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         self.setStatusBar(QStatusBar())
+
+        # イベント接続（サムネイルサイズ＋中央ペイン幅調整）
+        self.radio_small.toggled.connect(lambda checked: checked and self.set_thumbnail_size_and_width('small'))
+        self.radio_medium.toggled.connect(lambda checked: checked and self.set_thumbnail_size_and_width('medium'))
+        self.radio_large.toggled.connect(lambda checked: checked and self.set_thumbnail_size_and_width('large'))
+        # ▲ サムネイルサイズ切替用ラジオボタン ▲
+
+    def set_thumbnail_size_and_width(self, size_label):
+        size_map = {
+            'small': (QSize(64, 64), 64 + 60),
+            'medium': (QSize(128, 128), 128 + 60),
+            'large': (QSize(192, 192), 192 + 60)
+        }
+        size, width = size_map.get(size_label, (QSize(128, 128), 188))
+        self.thumbnail_list.setIconSize(size)
+        self.thumbnail_list.update()
+        # 中央ペイン（サムネイルリスト＋ラジオボタン）の幅を1列分に調整
+        # 左: 300, 中央: width, 右: 900
+        self.main_splitter.setSizes([300, width, 900])
 
     def on_folder_selected(self, index):
         file_path = self.folder_view.model().filePath(index)
@@ -137,4 +189,3 @@ class MainWindow(QMainWindow):
         for image_path in self.image_paths:
             icon = QIcon(load_pixmap(image_path))
             item = QListWidgetItem(icon, os.path.basename(image_path))
-            self.thumbnail_list.addItem(item)

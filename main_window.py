@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QHBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QHBoxLayout, QPushButton
 from ui.folder_panel import FolderPanel
 from ui.thumbnail_panel import ThumbnailPanel
 from ui.preview_panel import PreviewPanel
@@ -16,6 +16,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PhotoMap Explorer")
         self.setGeometry(100, 100, 1400, 900)
         self.image_paths = []
+        self.is_fullscreen = False  # ウィンドウ全体の全画面状態フラグ
+        self.is_preview_fullscreen = False  # プレビューのみ全画面状態フラグ
+        self._original_central_widget = None  # 元の中央ウィジェット保持用
 
         self.folder_panel = FolderPanel(None)
         self.folder_panel.folder_changed.connect(self.on_folder_selected)
@@ -28,14 +31,27 @@ class MainWindow(QMainWindow):
         self.address_bar_widget, self.address_bar_edit = create_address_bar_widget(
             self.current_path, self.on_address_part_double_clicked, self.on_address_entered
         )
-        # self.go_to_parent_button = self.create_go_to_parent_button()  # ←不要
-        controls_widget = QWidget()
-        controls_layout = QHBoxLayout(controls_widget)
+        # 最大化ボタン（画像/地図）
+        self.maximize_image_btn = QPushButton("画像最大化")
+        self.maximize_image_btn.setFixedWidth(90)
+        self.maximize_image_btn.clicked.connect(self.toggle_image_maximize)
+        self.maximize_map_btn = QPushButton("地図最大化")
+        self.maximize_map_btn.setFixedWidth(90)
+        self.maximize_map_btn.clicked.connect(self.toggle_map_maximize)
+        self.restore_btn = QPushButton("元に戻す")
+        self.restore_btn.setFixedWidth(90)
+        self.restore_btn.clicked.connect(self.restore_normal_view)
+        self.restore_btn.hide()
+
+        self.controls_widget = QWidget()
+        controls_layout = QHBoxLayout(self.controls_widget)
         controls_layout.setContentsMargins(5, 5, 5, 5)
         controls_layout.setSpacing(5)
         controls_layout.addWidget(self.address_bar_widget)
-        # controls_layout.addWidget(self.go_to_parent_button)  # ←不要
-        controls_widget.setFixedHeight(40)
+        controls_layout.addWidget(self.maximize_image_btn)
+        controls_layout.addWidget(self.maximize_map_btn)
+        controls_layout.addWidget(self.restore_btn)
+        self.controls_widget.setFixedHeight(40)
         # --- ここまで ---
 
         self.middle_splitter = QSplitter(Qt.Vertical)
@@ -52,9 +68,15 @@ class MainWindow(QMainWindow):
         self.main_splitter.addWidget(self.right_splitter)
         self.main_splitter.setSizes([700, 200, 700])
 
+        self._maximize_container = QWidget()  # 最大化用一時コンテナ
+        maximize_layout = QVBoxLayout(self._maximize_container)
+        maximize_layout.setContentsMargins(0, 0, 0, 0)
+        self._maximize_container.hide()
+
         layout = QVBoxLayout()
-        layout.addWidget(controls_widget)
+        layout.addWidget(self.controls_widget)
         layout.addWidget(self.main_splitter)
+        layout.addWidget(self._maximize_container)
 
         container = QWidget()
         container.setLayout(layout)
@@ -62,6 +84,9 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar())
 
         self.set_thumbnail_size_and_width('medium')
+        self._panel_maximized = None  # 'image' or 'map' or None
+        self._preview_panel_index_in_splitter = 0
+        self._map_panel_index_in_splitter = 1
 
     def set_thumbnail_size_and_width(self, size_label):
         size_map = {
@@ -147,3 +172,62 @@ class MainWindow(QMainWindow):
         status += f"カメラ: {info['camera']}  " if info['camera'] else ""
         status += f"シャッタースピード: {info['shutter']}" if info['shutter'] else ""
         self.statusBar().showMessage(status, 10000)
+
+    def mouseDoubleClickEvent(self, event):
+        self.toggle_image_maximize()
+        super().mouseDoubleClickEvent(event)
+
+    def toggle_image_maximize(self):
+        if self._panel_maximized == 'image':
+            self.restore_normal_view()
+            return
+        # preview_panelをright_splitterから外し、最大化コンテナに移動
+        idx = self.right_splitter.indexOf(self.preview_panel)
+        if idx != -1:
+            self._preview_panel_index_in_splitter = idx
+            self.right_splitter.widget(idx).setParent(None)
+        layout = self._maximize_container.layout()
+        layout.addWidget(self.preview_panel)
+        self.controls_widget.hide()
+        self.main_splitter.hide()
+        self._maximize_container.show()
+        self.maximize_image_btn.hide()
+        self.maximize_map_btn.hide()
+        self.restore_btn.show()  # 最大化時は必ず表示
+        self._panel_maximized = 'image'
+        # 画像拡大: QLabel等でscaledContents=True推奨（PreviewPanel側で対応）
+
+    def toggle_map_maximize(self):
+        if self._panel_maximized == 'map':
+            self.restore_normal_view()
+            return
+        idx = self.right_splitter.indexOf(self.map_panel)
+        if idx != -1:
+            self._map_panel_index_in_splitter = idx
+            self.right_splitter.widget(idx).setParent(None)
+        layout = self._maximize_container.layout()
+        layout.addWidget(self.map_panel)
+        self.controls_widget.hide()
+        self.main_splitter.hide()
+        self._maximize_container.show()
+        self.maximize_image_btn.hide()
+        self.maximize_map_btn.hide()
+        self.restore_btn.show()  # 最大化時は必ず表示
+        self._panel_maximized = 'map'
+
+    def restore_normal_view(self):
+        # 画像/地図パネルを元のsplitterに戻す
+        layout = self._maximize_container.layout()
+        if self._panel_maximized == 'image':
+            layout.removeWidget(self.preview_panel)
+            self.right_splitter.insertWidget(self._preview_panel_index_in_splitter, self.preview_panel)
+        elif self._panel_maximized == 'map':
+            layout.removeWidget(self.map_panel)
+            self.right_splitter.insertWidget(self._map_panel_index_in_splitter, self.map_panel)
+        self.controls_widget.show()
+        self.main_splitter.show()
+        self._maximize_container.hide()
+        self.maximize_image_btn.show()
+        self.maximize_map_btn.show()
+        self.restore_btn.hide()
+        self._panel_maximized = None

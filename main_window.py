@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QSplitter, QWidget, QStatusBar, QHBoxLayout, QPushButton, QStackedLayout
 from ui.folder_panel import FolderPanel
 from ui.thumbnail_panel import ThumbnailPanel
 from ui.preview_panel import PreviewPanel
@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         self.maximize_map_btn.clicked.connect(self.toggle_map_maximize)
         self.restore_btn = QPushButton("元に戻す")
         self.restore_btn.setFixedWidth(90)
+        self.restore_btn.setFixedHeight(30)  # 高さを30pxに固定
         self.restore_btn.clicked.connect(self.restore_normal_view)
         self.restore_btn.hide()
 
@@ -69,8 +70,21 @@ class MainWindow(QMainWindow):
         self.main_splitter.setSizes([700, 200, 700])
 
         self._maximize_container = QWidget()  # 最大化用一時コンテナ
-        maximize_layout = QVBoxLayout(self._maximize_container)
-        maximize_layout.setContentsMargins(0, 0, 0, 0)
+        self._maximize_stack = QStackedLayout(self._maximize_container)
+        self._maximize_panel = QWidget()
+        self._maximize_panel_layout = QVBoxLayout(self._maximize_panel)
+        self._maximize_panel_layout.setContentsMargins(0, 0, 0, 0)
+        self._maximize_panel_layout.setSpacing(0)
+        # 右上に元に戻すボタンを重ねる
+        self._maximize_topbar = QWidget()
+        self._maximize_topbar.setFixedHeight(30)  # トップバー全体の高さを30pxに固定
+        self._maximize_topbar_layout = QHBoxLayout(self._maximize_topbar)
+        self._maximize_topbar_layout.setContentsMargins(0, 0, 0, 0)
+        self._maximize_topbar_layout.addStretch()
+        self._maximize_topbar_layout.addWidget(self.restore_btn)
+        self._maximize_panel_layout.addWidget(self._maximize_topbar)
+        # self._maximize_panel_layout.addStretch()  # 余白をなくすため削除
+        self._maximize_stack.addWidget(self._maximize_panel)
         self._maximize_container.hide()
 
         layout = QVBoxLayout()
@@ -181,21 +195,31 @@ class MainWindow(QMainWindow):
         if self._panel_maximized == 'image':
             self.restore_normal_view()
             return
-        # preview_panelをright_splitterから外し、最大化コンテナに移動
         idx = self.right_splitter.indexOf(self.preview_panel)
         if idx != -1:
             self._preview_panel_index_in_splitter = idx
             self.right_splitter.widget(idx).setParent(None)
-        layout = self._maximize_container.layout()
-        layout.addWidget(self.preview_panel)
+        # 最大化パネルの中央にpreview_panelを追加
+        for i in reversed(range(self._maximize_panel_layout.count())):
+            item = self._maximize_panel_layout.itemAt(i)
+            widget = item.widget()
+            if widget and widget not in [self._maximize_topbar]:
+                self._maximize_panel_layout.removeWidget(widget)
+                widget.setParent(None)
+        self._maximize_panel_layout.addWidget(self.preview_panel)
         self.controls_widget.hide()
         self.main_splitter.hide()
         self._maximize_container.show()
         self.maximize_image_btn.hide()
         self.maximize_map_btn.hide()
-        self.restore_btn.show()  # 最大化時は必ず表示
+        self.restore_btn.show()
         self._panel_maximized = 'image'
-        # 画像拡大: QLabel等でscaledContents=True推奨（PreviewPanel側で対応）
+        # 画像拡大: 現在選択中の画像を再表示
+        if self.image_paths:
+            # サムネイルパネルで選択中の画像があればそれを、なければ先頭
+            selected = getattr(self.thumbnail_panel, 'current_image_path', None)
+            image_path = selected if selected else self.image_paths[0]
+            self.show_image_and_map(image_path)
 
     def toggle_map_maximize(self):
         if self._panel_maximized == 'map':
@@ -205,19 +229,24 @@ class MainWindow(QMainWindow):
         if idx != -1:
             self._map_panel_index_in_splitter = idx
             self.right_splitter.widget(idx).setParent(None)
-        layout = self._maximize_container.layout()
-        layout.addWidget(self.map_panel)
+        # 最大化パネルの中央にmap_panelを追加
+        for i in reversed(range(self._maximize_panel_layout.count())):
+            item = self._maximize_panel_layout.itemAt(i)
+            widget = item.widget()
+            if widget and widget not in [self._maximize_topbar]:
+                self._maximize_panel_layout.removeWidget(widget)
+                widget.setParent(None)
+        self._maximize_panel_layout.addWidget(self.map_panel)
         self.controls_widget.hide()
         self.main_splitter.hide()
         self._maximize_container.show()
         self.maximize_image_btn.hide()
         self.maximize_map_btn.hide()
-        self.restore_btn.show()  # 最大化時は必ず表示
+        self.restore_btn.show()
         self._panel_maximized = 'map'
 
     def restore_normal_view(self):
-        # 画像/地図パネルを元のsplitterに戻す
-        layout = self._maximize_container.layout()
+        layout = self._maximize_panel_layout
         if self._panel_maximized == 'image':
             layout.removeWidget(self.preview_panel)
             self.right_splitter.insertWidget(self._preview_panel_index_in_splitter, self.preview_panel)

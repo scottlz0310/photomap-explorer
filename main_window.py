@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.main_splitter.addWidget(self.folder_panel)
         self.main_splitter.addWidget(self.middle_splitter)
         self.main_splitter.addWidget(self.right_splitter)
-        self.main_splitter.setSizes([300, 200, 900])
+        self.main_splitter.setSizes([700, 200, 700]) 
 
         layout = QVBoxLayout()
         layout.addWidget(controls_widget)
@@ -67,17 +67,23 @@ class MainWindow(QMainWindow):
         if os.path.isdir(path):
             self.image_paths = find_images_in_directory(path)
             self.thumbnail_panel.update_list(self.image_paths)
-            if self.image_paths:
-                self.show_image_and_map(self.image_paths[0])
+            # フォルダ選択時はリスト更新のみ、選択・表示は行わない
         elif os.path.isfile(path):
             dir_path = os.path.dirname(path)
             self.image_paths = find_images_in_directory(dir_path)
             self.thumbnail_panel.update_list(self.image_paths)
-            if path in self.image_paths:
+            norm_path = os.path.normcase(os.path.normpath(path))
+            norm_image_paths = [os.path.normcase(os.path.normpath(p)) for p in self.image_paths]
+            # ファイル選択時は選択画像のみを選択・表示
+            if norm_path in norm_image_paths:
+                self.thumbnail_panel.select_thumbnail(path, center=True)
                 self.show_image_and_map(path)
+            else:
+                pass
 
     def on_thumbnail_clicked(self, image_path):
         self.show_image_and_map(image_path)
+        self.folder_panel.select_file(image_path, center=True)  # サムネイル選択時のみcenter
 
     def show_image_and_map(self, image_path):
         pixmap = QPixmap(image_path)

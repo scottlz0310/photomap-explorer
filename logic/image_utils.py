@@ -6,14 +6,24 @@ import exifread
 def load_pixmap(image_path):
     return QPixmap(image_path)
 
-def find_images_in_directory(folder_path):
+def find_images_in_directory(folder_path, recursive=False):
     valid_extensions = (".jpg", ".jpeg", ".png", ".bmp", ".gif")
     image_paths = []
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            if file.lower().endswith(valid_extensions):
-                image_paths.append(os.path.abspath(os.path.join(root, file)))
-    return image_paths
+    if recursive:
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                if file.lower().endswith(valid_extensions):
+                    image_paths.append(os.path.abspath(os.path.join(root, file)))
+    else:
+        try:
+            for file in os.listdir(folder_path):
+                full_path = os.path.join(folder_path, file)
+                if os.path.isfile(full_path) and file.lower().endswith(valid_extensions):
+                    image_paths.append(os.path.abspath(full_path))
+        except Exception:
+            pass
+    # ファイル名昇順でソートして返す
+    return sorted(image_paths, key=lambda x: os.path.basename(x).lower())
 
 def extract_gps_coords(image_path):
     try:

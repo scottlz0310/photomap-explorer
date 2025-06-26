@@ -1,7 +1,9 @@
 from PyQt5.QtWidgets import QTreeView, QHeaderView, QFileSystemModel
-from PyQt5.QtCore import Qt, QDir
+from PyQt5.QtCore import Qt, QDir, pyqtSignal
 
 class FolderPanel(QTreeView):
+    folder_changed = pyqtSignal(str)  # フォルダ移動時にパスを通知
+
     def __init__(self, on_folder_selected):
         super().__init__()
         model = QFileSystemModel()
@@ -24,6 +26,13 @@ class FolderPanel(QTreeView):
         self.setRootIsDecorated(False)  # ツリー線・展開アイコン非表示
         self.setItemsExpandable(False)  # 展開禁止
         self.setHeaderHidden(False)     # ヘッダーは表示（お好みでTrueも可）
+        self.doubleClicked.connect(self._on_double_clicked)
+
+    def _on_double_clicked(self, index):
+        path = self.model().filePath(index)
+        if self.model().isDir(index):
+            self.set_root(path)
+            self.folder_changed.emit(path)  # MainWindowに通知
 
     def get_path(self, index):
         return self.model().filePath(index)

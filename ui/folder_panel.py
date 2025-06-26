@@ -20,6 +20,10 @@ class FolderPanel(QTreeView):
         self.setColumnHidden(1, True)
         self.setColumnHidden(2, True)
         self.setColumnHidden(3, True)
+        # --- ここからリスト風設定 ---
+        self.setRootIsDecorated(False)  # ツリー線・展開アイコン非表示
+        self.setItemsExpandable(False)  # 展開禁止
+        self.setHeaderHidden(False)     # ヘッダーは表示（お好みでTrueも可）
 
     def get_path(self, index):
         return self.model().filePath(index)
@@ -27,10 +31,10 @@ class FolderPanel(QTreeView):
     def set_root(self, path):
         index = self.model().index(path)
         self.setRootIndex(index)
-        
+        # 1階層リスト風なので、setRootIndexで直下のみ表示
+    
     def select_file(self, file_path, center=False):
         model = self.model()
-        # 名前順でソート
         self.sortByColumn(0, Qt.AscendingOrder)
         index = model.index(file_path)
         if index.isValid():

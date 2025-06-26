@@ -4,7 +4,7 @@ from ui.thumbnail_panel import ThumbnailPanel
 from ui.preview_panel import PreviewPanel
 from ui.map_panel import MapPanel
 from ui.controls import create_controls, create_address_bar_widget
-from logic.image_utils import find_images_in_directory, load_pixmap, extract_gps_coords, generate_map_html
+from logic.image_utils import find_images_in_directory, load_pixmap, extract_gps_coords, generate_map_html, extract_image_info
 from PyQt5.QtCore import Qt, QUrl, QSize, QDir
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QListWidgetItem
@@ -139,3 +139,11 @@ class MainWindow(QMainWindow):
 
         map_file = generate_map_html(lat, lon)
         self.map_panel.load_map(map_file)
+
+        # 画像情報を取得しステータスバーに表示
+        info = extract_image_info(image_path)
+        status = f"解像度: {info['width']}x{info['height']}  "
+        status += f"撮影日時: {info['datetime']}  " if info['datetime'] else ""
+        status += f"カメラ: {info['camera']}  " if info['camera'] else ""
+        status += f"シャッタースピード: {info['shutter']}" if info['shutter'] else ""
+        self.statusBar().showMessage(status, 10000)

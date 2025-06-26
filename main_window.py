@@ -17,7 +17,8 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1400, 900)
         self.image_paths = []
 
-        self.folder_panel = FolderPanel(self.on_folder_selected)
+        self.folder_panel = FolderPanel(None)
+        self.folder_panel.folder_changed.connect(self.on_folder_selected)
         self.thumbnail_panel = ThumbnailPanel(self.on_thumbnail_clicked, self.set_thumbnail_size_and_width)
         self.preview_panel = PreviewPanel()
         self.map_panel = MapPanel()
@@ -27,13 +28,13 @@ class MainWindow(QMainWindow):
         self.address_bar_widget, self.address_bar_edit = create_address_bar_widget(
             self.current_path, self.on_address_part_double_clicked, self.on_address_entered
         )
-        self.go_to_parent_button = self.create_go_to_parent_button()
+        # self.go_to_parent_button = self.create_go_to_parent_button()  # ←不要
         controls_widget = QWidget()
         controls_layout = QHBoxLayout(controls_widget)
         controls_layout.setContentsMargins(5, 5, 5, 5)
         controls_layout.setSpacing(5)
         controls_layout.addWidget(self.address_bar_widget)
-        controls_layout.addWidget(self.go_to_parent_button)
+        # controls_layout.addWidget(self.go_to_parent_button)  # ←不要
         controls_widget.setFixedHeight(40)
         # --- ここまで ---
 
@@ -61,15 +62,6 @@ class MainWindow(QMainWindow):
         self.setStatusBar(QStatusBar())
 
         self.set_thumbnail_size_and_width('medium')
-
-    def create_go_to_parent_button(self):
-        from PyQt5.QtWidgets import QPushButton, QStyle
-        btn = QPushButton()
-        btn.setIcon(btn.style().standardIcon(QStyle.SP_FileDialogToParent))
-        btn.setToolTip("親フォルダへ移動")
-        btn.setFixedSize(30, 30)
-        btn.clicked.connect(self.on_go_to_parent)
-        return btn
 
     def set_thumbnail_size_and_width(self, size_label):
         size_map = {
@@ -109,26 +101,26 @@ class MainWindow(QMainWindow):
             self.image_paths = find_images_in_directory(folder_path)
             self.thumbnail_panel.update_list(self.image_paths)
 
-    def on_folder_selected(self, index):
-        path = self.folder_panel.get_path(index)
+    def on_folder_selected(self, path):
+        import os
         if os.path.isdir(path):
             self.update_address_bar(path)
             self.image_paths = find_images_in_directory(path)
             self.thumbnail_panel.update_list(self.image_paths)
-            # フォルダ選択時はリスト更新のみ、選択・表示は行わない
         elif os.path.isfile(path):
             dir_path = os.path.dirname(path)
             self.update_address_bar(dir_path)
             self.image_paths = find_images_in_directory(dir_path)
             self.thumbnail_panel.update_list(self.image_paths)
+            # サムネイルリスト内で該当画像を選択し、プレビュー・地図も更新
             norm_path = os.path.normcase(os.path.normpath(path))
             norm_image_paths = [os.path.normcase(os.path.normpath(p)) for p in self.image_paths]
-            # ファイル選択時は選択画像のみを選択・表示
             if norm_path in norm_image_paths:
                 self.thumbnail_panel.select_thumbnail(path, center=True)
                 self.show_image_and_map(path)
             else:
-                pass
+                # サムネイルリストに画像がない場合も、プレビュー・地図だけは更新
+                self.show_image_and_map(path)
 
     def on_thumbnail_clicked(self, image_path):
         self.show_image_and_map(image_path)
@@ -147,33 +139,3 @@ class MainWindow(QMainWindow):
 
         map_file = generate_map_html(lat, lon)
         self.map_panel.load_map(map_file)
-
-    def on_go_to_parent(self):
-        current_path = self.current_path
-        import os
-        # Windows: ドライブ直下（C:\ など）なら全ドライブに戻す
-        if os.name == 'nt':
-            drive, rest = os.path.splitdrive(current_path)
-            if drive and rest in ('\\', '/',''):
-                self.folder_panel.set_root("")
-                self.statusBar().showMessage("全ドライブに戻りました", 3000)
-                self.update_address_bar(QDir.rootPath())
-                return
-        # ルートや空パスも全ドライブに戻す
-        if not current_path or current_path == QDir.rootPath():
-            self.folder_panel.set_root("")
-            self.statusBar().showMessage("全ドライブに戻りました", 3000)
-            self.update_address_bar(QDir.rootPath())
-            return
-        parent_path = os.path.dirname(os.path.normpath(current_path.rstrip(os.sep)))
-        # これ以上上がれない場合も全ドライブ
-        if not parent_path or parent_path == current_path:
-            self.folder_panel.set_root("")
-            self.statusBar().showMessage("全ドライブに戻りました", 3000)
-            self.update_address_bar(QDir.rootPath())
-            return
-        self.update_address_bar(parent_path)
-        self.folder_panel.set_root(parent_path)
-        self.image_paths = find_images_in_directory(parent_path)
-        self.thumbnail_panel.update_list(self.image_paths)
-        self.statusBar().showMessage(f"親フォルダへ移動: {parent_path}", 3000)

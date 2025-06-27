@@ -192,6 +192,66 @@ photomap-explorer/
 - **Factory Pattern**: オブジェクト生成
 - **Observer Pattern**: イベント通知
 
+---
+
+## 📋 実装進捗状況
+
+### ✅ Phase 1: 基盤整備 (完了)
+- **日時**: 2025年6月28日完了
+- **実装項目**:
+  - Clean Architectureディレクトリ構造の作成
+  - アプリケーション層の初期実装 (`app/`)
+  - ユーティリティ層の実装 (`utils/`)
+  - ドメイン層の基本構造 (`domain/`)
+  - インフラ層の基本構造 (`infrastructure/`)
+
+### ✅ Phase 2: ドメイン層分離・インフラ層整備 (完了)
+- **日時**: 2025年6月28日完了
+- **実装項目**:
+  - ドメインモデルの実装 (`Photo`, `PhotoCollection`)
+  - リポジトリインターフェースの定義
+  - インフラストラクチャサービスの実装
+    - EXIF読み取り (`ExifReader`)
+    - ファイルシステムアクセス (`FileSystemService`)
+    - 地図生成 (`MapGenerator`)
+    - リポジトリ実装 (`FileSystemPhotoRepository`)
+  - 既存ロジックの移行とリファクタリング
+  - 包括的テストの実装と検証
+
+### ✅ Phase 3: プレゼンテーション層リファクタリング (完了)
+- **日時**: 2025年6月28日完了
+- **実装項目**:
+  - プレゼンテーション層アーキテクチャの構築
+  - MVVM/MVCパターンの実装
+    - BaseViewModel（抽象基底クラス）
+    - SimpleMainViewModel（テスト用実装）
+    - MainController（View-ViewModel制御）
+  - UIコンポーネントのClean Architecture対応
+    - NavigationControls（アドレスバー）
+    - FolderPanel（フォルダツリー）
+    - ThumbnailPanel（サムネイル表示）
+    - PreviewPanel（画像プレビュー）
+    - MapPanel（地図表示、WebEngine対応）
+  - MainView（統合メインビュー）の実装
+  - 後方互換性関数の提供
+  - 包括的テストの実装と検証
+
+### 🔄 Phase 4: 既存UIとの統合・移行 (進行中)
+- **予定実装項目**:
+  - 既存UIコンポーネントとの段階的統合
+  - レガシーコードの置き換え
+  - エンドツーエンドテストの実装
+  - パフォーマンス最適化
+
+### 📅 Phase 5: 最終検証・最適化 (予定)
+- **予定実装項目**:
+  - 全機能の動作検証
+  - パフォーマンステスト
+  - ドキュメント整備
+  - CI/CDパイプライン構築
+
+---
+
 ### 🎯 期待される効果
 
 #### 開発効率

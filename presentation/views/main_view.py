@@ -9,15 +9,15 @@ from PyQt5.QtCore import Qt, QDir, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 # 新しいプレゼンテーション層のコンポーネント
-from presentation.views.panels.folder_panel import FolderPanel
-from presentation.views.panels.preview_panel import PreviewPanel
-from presentation.views.panels.map_panel import MapPanel
-from presentation.views.controls.address_bar import NavigationControls
-from presentation.views.controls.thumbnail_list import ThumbnailPanel
+from .panels.folder_panel import FolderPanel
+from .panels.preview_panel import PreviewPanel
+from .panels.map_panel import MapPanel
+from .controls.address_bar import NavigationControls
+from .controls.thumbnail_list import ThumbnailPanel
 
 # ViewModelとController
-from presentation.viewmodels.simple_main_viewmodel import SimpleMainViewModel
-from presentation.controllers.main_controller import MainController
+from ..viewmodels.simple_main_viewmodel import SimpleMainViewModel
+from ..controllers.main_controller import MainController
 
 
 class MaximizeControls(QWidget):

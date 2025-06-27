@@ -195,7 +195,12 @@ def create_address_bar_widget(path, on_part_double_clicked, address_entered_call
     widget.set_path(path)
     
     # コールバック接続
-    widget.path_changed.connect(on_part_double_clicked)
-    widget.address_bar_widget.address_bar.returnPressed.connect(address_entered_callback)
+    if on_part_double_clicked:
+        widget.path_changed.connect(on_part_double_clicked)
     
-    return widget, widget.address_bar
+    # 仮の編集エリア（実際のフィールドがないため、ダミーを返す）
+    dummy_edit = QLineEdit()
+    if address_entered_callback:
+        dummy_edit.returnPressed.connect(address_entered_callback)
+    
+    return widget, dummy_edit

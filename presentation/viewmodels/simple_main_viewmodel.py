@@ -2,7 +2,7 @@
 シンプルなメインViewModelクラス
 Clean Architecture - プレゼンテーション層
 """
-from presentation.viewmodels.base_viewmodel import BaseViewModel
+from .base_viewmodel import BaseViewModel
 
 
 class SimpleMainViewModel(BaseViewModel):

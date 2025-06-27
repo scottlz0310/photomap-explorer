@@ -40,3 +40,178 @@
 ## 追加機能の検討
 - メニューバーの導入（ファイル・表示・設定など基本構成）。
 - 起動引数を利用してフォルダ/ファイルへの自動遷移を実現。
+
+## 第2回コードリファクタリング計画（全体設計）
+
+### 🎯 現在の問題点
+
+#### 1. 構造的問題
+- `window/main_window.py` (266行) が肥大化
+- `ui/`ディレクトリ内の責任範囲が曖昧
+- 一部のUIコンポーネントが単機能ファイルに散らばっている
+- `logic/`とUIの境界が不明確
+
+#### 2. アーキテクチャ的問題
+- MVCパターンやMVVMパターンが未適用
+- 依存関係が複雑（循環参照の可能性）
+- テスタビリティが低い
+- 設定管理機能がない
+
+### 🗂️ 提案する新しいディレクトリ構造
+
+```
+photomap-explorer/
+├── main.py                     # エントリーポイント
+├── app/                        # アプリケーション層
+│   ├── __init__.py
+│   ├── application.py          # アプリケーション制御
+│   └── config.py               # 設定管理
+├── domain/                     # ドメイン層（ビジネスロジック）
+│   ├── __init__.py
+│   ├── models/                 # データモデル
+│   │   ├── __init__.py
+│   │   ├── image.py            # 画像データモデル
+│   │   ├── location.py         # GPS位置情報モデル
+│   │   └── folder.py           # フォルダモデル
+│   ├── services/               # サービス層
+│   │   ├── __init__.py
+│   │   ├── image_service.py    # 画像処理サービス
+│   │   ├── gps_service.py      # GPS処理サービス
+│   │   └── map_service.py      # 地図生成サービス
+│   └── repositories/           # データアクセス層
+│       ├── __init__.py
+│       ├── image_repository.py # 画像データアクセス
+│       └── folder_repository.py# フォルダデータアクセス
+├── presentation/               # プレゼンテーション層
+│   ├── __init__.py
+│   ├── controllers/            # コントローラー
+│   │   ├── __init__.py
+│   │   ├── main_controller.py  # メインウィンドウ制御
+│   │   ├── image_controller.py # 画像表示制御
+│   │   └── map_controller.py   # 地図制御
+│   ├── views/                  # ビュー（UIコンポーネント）
+│   │   ├── __init__.py
+│   │   ├── main_window.py      # メインウィンドウ
+│   │   ├── panels/             # パネルコンポーネント
+│   │   │   ├── __init__.py
+│   │   │   ├── folder_panel.py
+│   │   │   ├── thumbnail_panel.py
+│   │   │   ├── preview_panel.py
+│   │   │   └── map_panel.py
+│   │   ├── controls/           # コントロール
+│   │   │   ├── __init__.py
+│   │   │   ├── address_bar.py
+│   │   │   ├── toolbar.py
+│   │   │   └── status_bar.py
+│   │   └── dialogs/            # ダイアログ
+│   │       ├── __init__.py
+│   │       └── settings_dialog.py
+│   └── viewmodels/             # ビューモデル（MVVM用）
+│       ├── __init__.py
+│       ├── main_viewmodel.py
+│       └── image_viewmodel.py
+├── infrastructure/             # インフラ層
+│   ├── __init__.py
+│   ├── file_system.py          # ファイルシステムアクセス
+│   ├── exif_reader.py          # Exif読み取り
+│   └── map_generator.py        # 地図HTML生成
+├── utils/                      # ユーティリティ
+│   ├── __init__.py
+│   ├── constants.py            # 定数
+│   ├── helpers.py              # ヘルパー関数
+│   └── exceptions.py           # カスタム例外
+└── tests/                      # テスト
+    ├── __init__.py
+    ├── unit/
+    ├── integration/
+    └── fixtures/
+```
+
+### 🚀 段階的実装計画
+
+#### Phase 1: 基盤整備
+1. ✅ **新ディレクトリ構造作成**
+2. ✅ **設定管理システム導入** (`app/config.py`)
+3. ✅ **カスタム例外クラス定義** (`utils/exceptions.py`)
+4. ✅ **定数・ヘルパー関数整理** (`utils/`)
+5. ✅ **アプリケーション制御クラス実装** (`app/application.py`)
+6. ✅ **ドメインモデル作成** (`domain/models/photo.py`, `photo_collection.py`)
+7. ✅ **リポジトリインターフェース定義** (`domain/repositories/photo_repository.py`)
+8. ✅ **ドメインサービス実装** (`domain/services/photo_domain_service.py`)
+
+**Phase 1完了！** 基盤となるアーキテクチャとドメイン層の骨格が整いました。
+
+#### Phase 2: ドメイン層分離
+1. ✅ **データモデル作成** (`domain/models/`)
+2. ✅ **サービス層実装** (`domain/services/`)
+3. ✅ **リポジトリ層実装** (`domain/repositories/`)
+4. ✅ **現在の`logic/image_utils.py`をサービス層に移行**
+5. ✅ **インフラ層実装** (`infrastructure/`)
+   - ✅ **EXIF読み取り** (`exif_reader.py`)
+   - ✅ **ファイルシステムアクセス** (`file_system.py`)
+   - ✅ **地図生成** (`map_generator.py`)
+   - ✅ **リポジトリ具象実装** (`repositories.py`)
+
+**Phase 2完了！** 既存のビジネスロジックが新しいアーキテクチャに統合されました。
+
+#### Phase 3: プレゼンテーション層リファクタリング
+1. ✅ **ビューモデル導入** (`presentation/viewmodels/`)
+2. ✅ **コントローラー分離** (`presentation/controllers/`)
+3. ✅ **UIコンポーネント再編成** (`presentation/views/`)
+4. ✅ **既存`ui/`ディレクトリから新構造へ移行**
+
+#### Phase 4: インフラ層整備
+1. ✅ **外部依存関係の分離** (`infrastructure/`)
+2. ✅ **テスタビリティ向上**
+3. ✅ **設定の外部化**
+
+#### Phase 5: 品質向上
+1. ✅ **ユニットテスト導入** (`tests/`)
+2. ✅ **統合テスト実装**
+3. ✅ **コードカバレッジ測定**
+4. ✅ **CI/CD環境整備**
+
+### 🏗️ 主要な設計原則
+
+#### 1. Clean Architecture
+- 依存関係の方向を明確に定義
+- ビジネスロジックをUIから完全分離
+- 外部依存関係の抽象化
+
+#### 2. SOLID原則の適用
+- **Single Responsibility**: 各クラスは単一の責任
+- **Open/Closed**: 拡張に開いて修正に閉じる
+- **Liskov Substitution**: サブタイプで置換可能
+- **Interface Segregation**: インターフェースの分離
+- **Dependency Inversion**: 依存関係の逆転
+
+#### 3. Design Patterns
+- **MVP/MVVM**: UI分離
+- **Repository Pattern**: データアクセス抽象化
+- **Service Pattern**: ビジネスロジック集約
+- **Factory Pattern**: オブジェクト生成
+- **Observer Pattern**: イベント通知
+
+### 🎯 期待される効果
+
+#### 開発効率
+- 🚀 **機能追加が容易**：モジュラー設計
+- 🔧 **保守性向上**：責任範囲の明確化
+- 🐛 **デバッグ効率化**：レイヤー分離
+
+#### 品質向上
+- ✅ **テスタビリティ**：依存関係の分離
+- 🔒 **安定性**：インターフェース設計
+- 📈 **スケーラビリティ**：Clean Architecture
+
+#### チーム開発
+- 👥 **並行開発**：モジュール独立性
+- 📚 **可読性**：明確な構造
+- 🎓 **学習コスト軽減**：標準的なパターン
+
+### ⚠️ 実装上の注意点
+
+1. **段階的移行**：一度にすべて変更せず、段階的に実施
+2. **後方互換性**：既存機能の維持
+3. **テスト駆動**：各段階でテスト実装
+4. **ドキュメント更新**：アーキテクチャ変更の記録

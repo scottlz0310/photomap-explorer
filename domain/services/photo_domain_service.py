@@ -379,3 +379,129 @@ class PhotoDomainService:
         collection.clear()
         for photo in optimized + photos_without_gps:
             collection.add_photo(photo)
+    
+    def load_photos_from_folder(self, folder_path: str) -> List[Photo]:
+        """
+        フォルダから写真を読み込み
+        
+        Args:
+            folder_path: 読み込み対象のフォルダパス
+            
+        Returns:
+            List[Photo]: 読み込まれた写真のリスト
+        """
+        try:
+            # 同期的にフォルダ内の写真を読み込み
+            photos = self._photo_repository.get_photos_in_folder(folder_path)
+            return photos
+        except Exception as e:
+            raise DomainError(f"フォルダからの写真読み込みに失敗しました: {e}")
+    
+    async def load_photos_from_folder_async(self, folder_path: str) -> List[Photo]:
+        """
+        フォルダから写真を非同期で読み込み
+        
+        Args:
+            folder_path: 読み込み対象のフォルダパス
+            
+        Returns:
+            List[Photo]: 読み込まれた写真のリスト
+        """
+        try:
+            # 非同期的にフォルダ内の写真を読み込み
+            photos = await self._photo_repository.get_photos_in_folder_async(folder_path)
+            return photos
+        except Exception as e:
+            raise DomainError(f"フォルダからの写真読み込みに失敗しました: {e}")
+    
+    def get_photos_with_gps(self, photos: Optional[List[Photo]] = None) -> List[Photo]:
+        """
+        GPS情報を持つ写真を取得
+        
+        Args:
+            photos: フィルタ対象の写真リスト（Noneの場合は全ての写真）
+            
+        Returns:
+            List[Photo]: GPS情報を持つ写真のリスト
+        """
+        if photos is None:
+            photos = self._photo_repository.get_all_photos()
+        
+        return [photo for photo in photos if photo.has_gps_data]
+    
+    def group_photos_by_location(
+        self, 
+        photos: List[Photo], 
+        distance_threshold_km: float = 1.0
+    ) -> List[List[Photo]]:
+        """
+        位置情報によって写真をグループ化
+        
+        Args:
+            photos: グループ化対象の写真
+            distance_threshold_km: グループ化の距離閾値（km）
+            
+        Returns:
+            List[List[Photo]]: 位置ごとの写真グループ
+        """
+        if not photos:
+            return []
+        
+        # GPS情報を持つ写真のみを対象
+        gps_photos = [photo for photo in photos if photo.has_gps_data]
+        
+        if not gps_photos:
+            return []
+        
+        groups = []
+        remaining_photos = gps_photos.copy()
+        
+        while remaining_photos:
+            # 新しいグループを開始
+            current_group = [remaining_photos.pop(0)]
+            base_location = current_group[0].gps_coordinates
+            
+            # 基準位置から閾値内の写真を同じグループに追加
+            i = 0
+            while i < len(remaining_photos):
+                photo = remaining_photos[i]
+                distance = self._calculate_distance(base_location, photo.gps_coordinates)
+                
+                if distance <= distance_threshold_km:
+                    current_group.append(remaining_photos.pop(i))
+                else:
+                    i += 1
+            
+            groups.append(current_group)
+        
+        return groups
+    
+    def _calculate_distance(self, coord1: GPSCoordinates, coord2: GPSCoordinates) -> float:
+        """
+        2つのGPS座標間の距離を計算（km）
+        
+        Args:
+            coord1: 座標1
+            coord2: 座標2
+            
+        Returns:
+            float: 距離（km）
+        """
+        import math
+        
+        # Haversine公式を使用
+        R = 6371  # 地球の半径（km）
+        
+        lat1_rad = math.radians(coord1.latitude)
+        lon1_rad = math.radians(coord1.longitude)
+        lat2_rad = math.radians(coord2.latitude)
+        lon2_rad = math.radians(coord2.longitude)
+        
+        dlat = lat2_rad - lat1_rad
+        dlon = lon2_rad - lon1_rad
+        
+        a = (math.sin(dlat/2)**2 + 
+             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon/2)**2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        
+        return R * c

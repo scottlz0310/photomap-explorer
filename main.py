@@ -49,16 +49,30 @@ UI選択例:
 def launch_new_ui(debug=False):
     """新UI（Clean Architecture）を起動"""
     try:
-        from presentation.views.simple_main_view import SimpleNewMainWindow
-        
-        window = SimpleNewMainWindow()
-        window.show()
-        
-        if debug:
-            print("✅ 新UI（Clean Architecture）起動成功")
-            window.show_status_message("新UI（Clean Architecture）で起動しました")
-        
-        return window
+        # 最適化版を優先して試行
+        try:
+            from presentation.views.final_optimized_main_view import OptimizedFinalMainView
+            window = OptimizedFinalMainView()
+            window.show()
+            
+            if debug:
+                print("✅ 新UI（最終最適化版）起動成功")
+                window.show_status_message("新UI（最終最適化版）で起動しました")
+            
+            return window
+            
+        except ImportError:
+            # フォールバック: 標準版
+            from presentation.views.simple_main_view import SimpleNewMainWindow
+            
+            window = SimpleNewMainWindow()
+            window.show()
+            
+            if debug:
+                print("✅ 新UI（Clean Architecture）起動成功")
+                window.show_status_message("新UI（Clean Architecture）で起動しました")
+            
+            return window
         
     except Exception as e:
         if debug:

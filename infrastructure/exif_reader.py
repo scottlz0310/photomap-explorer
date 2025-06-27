@@ -10,8 +10,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from decimal import Decimal
 
-from ..domain.models.photo import GPSCoordinates, PhotoMetadata
-from ..utils.exceptions import InfrastructureError
+from domain.models.photo import GPSCoordinates, PhotoMetadata
+from utils.exceptions import InfrastructureError
 
 
 class ExifReader:

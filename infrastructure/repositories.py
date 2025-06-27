@@ -9,12 +9,12 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import asyncio
 
-from ..domain.models.photo import Photo, GPSCoordinates
-from ..domain.models.photo_collection import PhotoCollection
-from ..domain.repositories.photo_repository import PhotoRepository, PhotoCollectionRepository
+from domain.models.photo import Photo, GPSCoordinates
+from domain.models.photo_collection import PhotoCollection
+from domain.repositories.photo_repository import PhotoRepository, PhotoCollectionRepository
 from .file_system import FileSystemService
 from .exif_reader import ExifReader
-from ..utils.exceptions import RepositoryError, InfrastructureError
+from utils.exceptions import RepositoryError, InfrastructureError
 
 
 class FileSystemPhotoRepository(PhotoRepository):

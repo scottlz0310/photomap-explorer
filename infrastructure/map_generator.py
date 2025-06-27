@@ -10,8 +10,8 @@ from typing import List, Optional, Tuple, Dict, Any
 import tempfile
 import os
 
-from ..domain.models.photo import Photo, GPSCoordinates
-from ..utils.exceptions import InfrastructureError
+from domain.models.photo import Photo, GPSCoordinates
+from utils.exceptions import InfrastructureError
 
 
 class MapGenerator:

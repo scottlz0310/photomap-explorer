@@ -17,7 +17,7 @@ from .controls.thumbnail_list import ThumbnailPanel
 
 # ViewModelとController
 from ..viewmodels.simple_main_viewmodel import SimpleMainViewModel
-from ..controllers.main_controller import MainController
+from ..controllers.main_controller import MainWindowController
 
 
 class MaximizeControls(QWidget):
@@ -190,7 +190,7 @@ class MainView(QMainWindow):
         """MVVM/MVCセットアップ"""
         # ViewModelとControllerの初期化
         self.view_model = SimpleMainViewModel()
-        self.controller = MainController(self, self.view_model)
+        self.controller = MainWindowController(self.view_model, self)
         
         # 初期パス設定
         self.navigation_controls.set_path(QDir.rootPath())

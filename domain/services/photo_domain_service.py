@@ -13,8 +13,8 @@ import asyncio
 from ..models.photo import Photo, GPSCoordinates, PhotoMetadata
 from ..models.photo_collection import PhotoCollection
 from ..repositories.photo_repository import PhotoRepository, PhotoCollectionRepository
-from ...utils.exceptions import DomainError, ValidationError
-from ...utils.helpers import is_image_file, normalize_path
+from utils.exceptions import DomainError, ValidationError
+from utils.helpers import is_image_file, normalize_path
 
 
 class PhotoDomainService:

@@ -10,27 +10,15 @@ venv/
 .DS_Store
 *.swp
 *.ini
+*.html
 
-# 一時ファイル・開発用ファイル
+# その他除外したい一時ファイル
 *.log
 *.spec
+*.ini
 dist/
 build/
 devel/
 idea/
-
-# バックアップ・アーカイブ（退避済み）
 backup_phase5_2_*/
 backup/
-archive/
-
-# 開発中間生成ファイル
-debug_*.py
-test_*.py
-simple_test_*.py
-*.html
-map_implementation_comparison.md
-memory_only_example.py
-migration_helper.py
-final_map_test.py
-release_validation.py

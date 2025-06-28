@@ -17,13 +17,3 @@ def create_folder_view(folder_selected_callback):
     folder_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
     return folder_view
-
-
-def create_folder_browser(folder_selected_callback):
-    """フォルダブラウザを作成（create_folder_viewのエイリアス）"""
-    return create_folder_view(folder_selected_callback)
-
-
-def get_folder_path_from_index(folder_model, index):
-    """インデックスからフォルダパスを取得"""
-    return folder_model.filePath(index)

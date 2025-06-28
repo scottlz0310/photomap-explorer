@@ -160,7 +160,7 @@ def main():
     # Qtアプリケーション作成
     app = QApplication(sys.argv)
     app.setApplicationName("PhotoMap Explorer")
-    app.setApplicationVersion("2.0.0")
+    app.setApplicationVersion("2.0.1")
     app.setOrganizationName("PhotoMap Explorer Project")
     
     # UIアーキテクチャに応じて起動

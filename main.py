@@ -13,6 +13,10 @@ import argparse
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 
+# ログ設定を最初に初期化
+from utils.logging_config import setup_logging, is_debug_mode
+setup_logging(is_debug_mode())
+
 # WebEngine問題の解決
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 

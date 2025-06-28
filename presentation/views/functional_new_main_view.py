@@ -53,11 +53,14 @@ class FunctionalNewMainWindow(QMainWindow):
         try:
             if hasattr(self, 'statusBar') and self.statusBar():
                 self.statusBar().showMessage(message, timeout)
-                print(f"Status: {message}")  # デバッグ用
+                # 正常稼働時の標準出力は抑制
             else:
-                print(f"Status (fallback): {message}")
+                # ステータスバーが無い場合のみフォールバック出力
+                pass
         except Exception as e:
-            print(f"ステータス表示エラー: {e}, メッセージ: {message}")
+            # エラー時のみログ出力（デバッグ目的）
+            import logging
+            logging.error(f"ステータス表示エラー: {e}, メッセージ: {message}")
     
     def _setup_icon(self):
         """アイコン設定"""
@@ -275,7 +278,9 @@ class FunctionalNewMainWindow(QMainWindow):
                             add_thumbnail(thumbnail_list, image_path)
                             added_count += 1
                     except Exception as e:
-                        print(f"サムネイル追加エラー({image_path}): {e}")
+                        # エラーログを適切に処理（標準出力ではなくログへ）
+                        import logging
+                        logging.warning(f"サムネイル追加エラー({image_path}): {e}")
                         continue
                 
                 # 追加結果を表示
@@ -384,7 +389,9 @@ class FunctionalNewMainWindow(QMainWindow):
             
         except Exception as e:
             self.show_status_message(f"❌ フォルダ内容表示エラー: {e}")
-            print(f"フォルダ内容表示詳細エラー: {e}")
+            # エラーログを適切に処理
+            import logging
+            logging.error(f"フォルダ内容表示詳細エラー: {e}")
     
     def _on_folder_changed(self, folder_path):
         """フォルダ変更時の処理"""
@@ -425,9 +432,11 @@ class FunctionalNewMainWindow(QMainWindow):
                 
         except Exception as e:
             self.show_status_message(f"❌ 画像選択エラー: {e}")
-            print(f"画像選択詳細エラー: {e}")
+            # エラーログを適切に処理
+            import logging
+            logging.error(f"画像選択詳細エラー: {e}")
             import traceback
-            traceback.print_exc()
+            logging.error(traceback.format_exc())
     
     def _display_image(self, image_path):
         """画像表示"""
@@ -457,9 +466,11 @@ class FunctionalNewMainWindow(QMainWindow):
             
         except Exception as e:
             self.show_status_message(f"❌ 画像表示エラー: {e}")
-            print(f"画像表示詳細エラー: {e}")
+            # エラーログを適切に処理
+            import logging
+            logging.error(f"画像表示詳細エラー: {e}")
             import traceback
-            traceback.print_exc()
+            logging.error(traceback.format_exc())
     
     def _update_map(self, image_path):
         """マップ更新"""
@@ -540,4 +551,6 @@ class FunctionalNewMainWindow(QMainWindow):
             
         except Exception as e:
             self.show_status_message(f"❌ ダブルクリック処理エラー: {e}")
-            print(f"ダブルクリック詳細エラー: {e}")
+            # エラーログを適切に処理
+            import logging
+            logging.error(f"ダブルクリック詳細エラー: {e}")

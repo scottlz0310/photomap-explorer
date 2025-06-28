@@ -22,7 +22,9 @@ class ThumbnailListWidget(QListWidget):
             self.addItem(item)
             return True
         except Exception as e:
-            print(f"サムネイル追加エラー: {e}")
+            # エラーログを適切に処理
+            import logging
+            logging.warning(f"サムネイル追加エラー: {e}")
             return False
     
     def set_thumbnail_size(self, size_label):

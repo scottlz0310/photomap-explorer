@@ -54,7 +54,10 @@ class PerformanceProfiler(QObject):
             'start_cpu': self.process.cpu_percent()
         }
         
-        print(f"📊 プロファイリング開始: {name}")
+        # プロファイリング開始ログ（デバッグモード時のみ）
+        import os
+        if os.getenv('DEBUG_MODE') == '1':
+            print(f"📊 プロファイリング開始: {name}")
         
     def stop_profiling(self, name: str = "default") -> Dict[str, Any]:
         """プロファイリング終了"""
@@ -78,10 +81,13 @@ class PerformanceProfiler(QObject):
                 'thread_count': threading.active_count()
             }
             
-            print(f"📊 プロファイリング完了: {name}")
-            print(f"   ⏱️  実行時間: {result['duration_ms']:.2f}ms")
-            print(f"   💾 メモリ使用量: {result['memory_peak_mb']:.2f}MB (差分: +{result['memory_delta_mb']:.2f}MB)")
-            print(f"   ⚡ CPU使用率: {result['cpu_percent']:.1f}%")
+            # プロファイリング結果出力（デバッグモード時のみ）
+            import os
+            if os.getenv('DEBUG_MODE') == '1':
+                print(f"📊 プロファイリング完了: {name}")
+                print(f"   ⏱️  実行時間: {result['duration_ms']:.2f}ms")
+                print(f"   💾 メモリ使用量: {result['memory_peak_mb']:.2f}MB (差分: +{result['memory_delta_mb']:.2f}MB)")
+                print(f"   ⚡ CPU使用率: {result['cpu_percent']:.1f}%")
             
             self.profile_completed.emit(result)
             return result
@@ -162,7 +168,10 @@ class PerformanceProfiler(QObject):
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(report_content)
         
-        print(f"📄 プロファイルレポート保存: {report_path}")
+        # レポート保存ログ（デバッグモード時のみ）
+        import os
+        if os.getenv('DEBUG_MODE') == '1':
+            print(f"📄 プロファイルレポート保存: {report_path}")
         return str(report_path)
 
 class UIComponentProfiler:
@@ -186,7 +195,12 @@ class UIComponentProfiler:
             return widget
             
         except Exception as e:
-            print(f"❌ ウィジェット作成エラー ({component_name}): {e}")
+            # エラーログを適切に処理（デバッグモード時のみ標準出力）
+            import os
+            import logging
+            logging.error(f"ウィジェット作成エラー ({component_name}): {e}")
+            if os.getenv('DEBUG_MODE') == '1':
+                print(f"❌ ウィジェット作成エラー ({component_name}): {e}")
             raise
     
     def profile_method_call(self, obj: object, method_name: str, *args, **kwargs):
@@ -204,7 +218,12 @@ class UIComponentProfiler:
             return result
             
         except Exception as e:
-            print(f"❌ メソッド実行エラー ({full_name}): {e}")
+            # エラーログを適切に処理（デバッグモード時のみ標準出力）
+            import os
+            import logging
+            logging.error(f"メソッド実行エラー ({full_name}): {e}")
+            if os.getenv('DEBUG_MODE') == '1':
+                print(f"❌ メソッド実行エラー ({full_name}): {e}")
             raise
     
     def generate_ui_performance_report(self) -> str:
@@ -255,7 +274,10 @@ class UIComponentProfiler:
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(report_content)
         
-        print(f"📄 UI パフォーマンスレポート保存: {report_path}")
+        # UIレポート保存ログ（デバッグモード時のみ）
+        import os
+        if os.getenv('DEBUG_MODE') == '1':
+            print(f"📄 UI パフォーマンスレポート保存: {report_path}")
         return str(report_path)
 
 def profile_function(func: Callable) -> Callable:

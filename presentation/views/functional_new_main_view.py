@@ -12,6 +12,9 @@ from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QSplitter, QWidget,
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
+# GIMP風アドレスバーのインポート
+from ui.controls import GimpStyleAddressBar, create_controls
+
 
 class FunctionalNewMainWindow(QMainWindow):
     """
@@ -35,6 +38,7 @@ class FunctionalNewMainWindow(QMainWindow):
         self.preview_panel = None
         self.map_panel = None
         self.folder_panel = None
+        self.address_bar = None  # GIMP風アドレスバー
         
         # アイコン設定
         self._setup_icon()
@@ -74,28 +78,28 @@ class FunctionalNewMainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
         
-        # ツールバー（高さを最小に調整）
+        # ツールバーとGIMP風アドレスバー
         toolbar_layout = QHBoxLayout()
-        toolbar_layout.setContentsMargins(5, 2, 5, 2)  # マージンを最小に
+        toolbar_layout.setContentsMargins(5, 2, 5, 2)
         
-        # フォルダ選択ボタン（高さを制限）
+        # フォルダ選択ボタン
         folder_btn = QPushButton("📁 フォルダ選択")
-        folder_btn.setMaximumHeight(30)  # 高さを制限
+        folder_btn.setMaximumHeight(30)
         folder_btn.clicked.connect(self._select_folder)
         toolbar_layout.addWidget(folder_btn)
         
-        # 現在のフォルダ表示（高さを制限）
-        self.folder_label = QLabel("フォルダが選択されていません")
-        self.folder_label.setStyleSheet("color: #666; margin: 2px; font-size: 11px;")
-        self.folder_label.setMaximumHeight(30)  # 高さを制限
-        toolbar_layout.addWidget(self.folder_label)
+        # GIMP風アドレスバーコントロール
+        controls_widget, self.address_bar, parent_button = create_controls(
+            self._on_address_changed, 
+            self._go_to_parent_folder
+        )
+        controls_widget.setMaximumHeight(35)
+        toolbar_layout.addWidget(controls_widget, 1)  # アドレスバーを拡張
         
-        toolbar_layout.addStretch()
-        
-        # ツールバーウィジェットを作成して高さを制限
+        # ツールバーウィジェットを作成
         toolbar_widget = QWidget()
         toolbar_widget.setLayout(toolbar_layout)
-        toolbar_widget.setMaximumHeight(35)  # ツールバー全体の高さを制限
+        toolbar_widget.setMaximumHeight(40)
         layout.addWidget(toolbar_widget)
         
         # メインスプリッター
@@ -230,7 +234,10 @@ class FunctionalNewMainWindow(QMainWindow):
         """フォルダ読み込み"""
         try:
             self.current_folder = folder_path
-            self.folder_label.setText(f"📁 {folder_path}")
+            
+            # GIMP風アドレスバーを更新
+            if self.address_bar:
+                self.address_bar.set_path(folder_path)
             
             # 画像ファイル検索
             image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
@@ -304,7 +311,7 @@ class FunctionalNewMainWindow(QMainWindow):
                 try:
                     list_widgets = self.findChildren(QListWidget)
                     if list_widgets:
-                        folder_content_list = list_widgets[0]  # 最初のQListWidgetを使用
+                        folder_content_list = list_widgets[0]  # まず最初のQListWidgetを使用
                         self.folder_content_list = folder_content_list  # 参照を修復
                     else:
                         return
@@ -554,3 +561,32 @@ class FunctionalNewMainWindow(QMainWindow):
             # エラーログを適切に処理
             import logging
             logging.error(f"ダブルクリック詳細エラー: {e}")
+    
+    def _on_address_changed(self, new_path):
+        """GIMP風アドレスバーでパスが変更された時"""
+        try:
+            if os.path.exists(new_path) and os.path.isdir(new_path):
+                self._load_folder(new_path)
+            else:
+                QMessageBox.warning(self, "パスエラー", f"無効なパス: {new_path}")
+                # アドレスバーを現在のパスに戻す
+                if self.address_bar and self.current_folder:
+                    self.address_bar.set_path(self.current_folder)
+        except Exception as e:
+            QMessageBox.warning(self, "エラー", f"パス変更エラー: {e}")
+            self.show_status_message(f"❌ パス変更エラー: {e}")
+    
+    def _go_to_parent_folder(self):
+        """親フォルダへ移動"""
+        try:
+            if self.current_folder:
+                parent_path = os.path.dirname(self.current_folder)
+                if parent_path != self.current_folder:  # ルートディレクトリでない場合
+                    self._load_folder(parent_path)
+                else:
+                    self.show_status_message("既にルートディレクトリです")
+            else:
+                self.show_status_message("フォルダが選択されていません")
+        except Exception as e:
+            QMessageBox.warning(self, "エラー", f"親フォルダ移動エラー: {e}")
+            self.show_status_message(f"❌ 親フォルダ移動エラー: {e}")

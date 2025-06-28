@@ -116,17 +116,22 @@ class MainWindow(QMainWindow):
         self.main_splitter.setSizes([300, width, 900])
 
     def update_address_bar(self, path):
-        # アドレスバーウィジェットを再生成して置き換え
-        parent = self.address_bar_widget.parentWidget()
-        layout = parent.layout()
-        layout.removeWidget(self.address_bar_widget)
-        self.address_bar_widget.deleteLater()
-        self.address_bar_widget, self.address_bar_edit = create_address_bar_widget(
-            path, self.on_address_part_double_clicked, self.on_address_entered
-        )
-        layout.insertWidget(0, self.address_bar_widget)
-        self.current_path = path
-        self.address_bar_widget.show()
+        # GimpStyleAddressBarの場合はset_path()メソッドを使用
+        if hasattr(self.address_bar_edit, 'set_path'):
+            self.address_bar_edit.set_path(path)
+            self.current_path = path
+        else:
+            # レガシーアドレスバーの場合は従来通り再生成
+            parent = self.address_bar_widget.parentWidget()
+            layout = parent.layout()
+            layout.removeWidget(self.address_bar_widget)
+            self.address_bar_widget.deleteLater()
+            self.address_bar_widget, self.address_bar_edit = create_address_bar_widget(
+                path, self.on_address_part_double_clicked, self.on_address_entered
+            )
+            layout.insertWidget(0, self.address_bar_widget)
+            self.current_path = path
+            self.address_bar_widget.show()
 
     def on_address_part_double_clicked(self, path):
         self.update_address_bar(path)
@@ -136,7 +141,14 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"移動: {path}", 3000)
 
     def on_address_entered(self):
-        folder_path = self.address_bar_edit.text()
+        # GimpStyleAddressBarから現在のパスを取得
+        if hasattr(self.address_bar_edit, 'current_path'):
+            folder_path = self.address_bar_edit.current_path
+        elif hasattr(self.address_bar_edit, 'text'):
+            folder_path = self.address_bar_edit.text()
+        else:
+            folder_path = None
+            
         if folder_path:
             self.update_address_bar(folder_path)
             self.folder_panel.set_root(folder_path)

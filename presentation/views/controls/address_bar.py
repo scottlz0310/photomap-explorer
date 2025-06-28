@@ -1,5 +1,5 @@
 """
-アドレスバーコントロール
+アドレスバーコントロール（GIMP風）
 Clean Architecture - プレゼンテーション層
 """
 import os
@@ -7,30 +7,108 @@ from PyQt5.QtWidgets import QLineEdit, QPushButton, QHBoxLayout, QWidget, QStyle
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QSizePolicy
 
+# GIMP風アドレスバーをインポート
+from ui.controls import GimpStyleAddressBar, create_controls
 
-class AddressBarButton(QPushButton):
-    """アドレスバー内のパス部分ボタン"""
+
+class NavigationControls(QWidget):
+    """
+    GIMP風ナビゲーションコントロール（新UI用）
+    Clean Architecture対応版
+    """
+    # シグナル
+    path_changed = pyqtSignal(str)
+    parent_folder_requested = pyqtSignal()
+    home_folder_requested = pyqtSignal()
+    refresh_requested = pyqtSignal()
     
-    def __init__(self, text, path, double_click_callback):
-        super().__init__(text)
-        self.path = path
-        self.double_click_callback = double_click_callback
-        self.setFlat(True)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setStyleSheet(
-            'QPushButton { '
-            'padding: 2px 8px; border: none; background: transparent; '
-            'min-width: 0px; max-width: 300px; } '
-            'QPushButton:hover { background: #e0e0e0; }'
-        )
-        self.setFixedHeight(28)
-        self.setMaximumHeight(28)
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._setup_ui()
+        self._current_path = ""
     
-    def mouseDoubleClickEvent(self, event):
-        """パス部分をダブルクリックした際の処理"""
-        self.double_click_callback(self.path)
-        event.accept()
+    def _setup_ui(self):
+        """GIMP風UIをセットアップ"""
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        
+        # GIMP風アドレスバーを作成
+        self.address_bar = GimpStyleAddressBar()
+        self.address_bar.path_changed.connect(self.path_changed.emit)
+        
+        # ナビゲーションボタン
+        self.parent_button = QPushButton()
+        self.parent_button.setIcon(self.parent_button.style().standardIcon(QStyle.SP_FileDialogToParent))
+        self.parent_button.setToolTip("親フォルダへ移動 (Alt+↑)")
+        self.parent_button.setFixedSize(28, 28)
+        self.parent_button.clicked.connect(self.parent_folder_requested.emit)
+        
+        # ホームボタン
+        self.home_button = QPushButton()
+        self.home_button.setIcon(self.home_button.style().standardIcon(QStyle.SP_DirHomeIcon))
+        self.home_button.setToolTip("ホームフォルダへ移動 (Ctrl+Home)")
+        self.home_button.setFixedSize(28, 28)
+        self.home_button.clicked.connect(self.home_folder_requested.emit)
+        
+        # リフレッシュボタン
+        self.refresh_button = QPushButton()
+        self.refresh_button.setIcon(self.refresh_button.style().standardIcon(QStyle.SP_BrowserReload))
+        self.refresh_button.setToolTip("フォルダを更新 (F5)")
+        self.refresh_button.setFixedSize(28, 28)
+        self.refresh_button.clicked.connect(self.refresh_requested.emit)
+        
+        # GIMP風のボタンスタイル
+        button_style = """
+            QPushButton {
+                border: 1px solid #a6a8aa;
+                border-radius: 3px;
+                background: #f6f6f6;
+                padding: 2px;
+            }
+            QPushButton:hover {
+                background: #d6d8da;
+                border-color: #969899;
+            }
+            QPushButton:pressed {
+                background: #c6c8ca;
+                border-color: #868889;
+            }
+            QPushButton:focus {
+                border: 1px solid #4a90e2;
+                background: #e8f4fd;
+            }
+        """
+        
+        self.parent_button.setStyleSheet(button_style)
+        self.home_button.setStyleSheet(button_style)
+        self.refresh_button.setStyleSheet(button_style)
+        
+        # レイアウトに追加（GIMP風の順序）
+        layout.addWidget(self.home_button)
+        layout.addWidget(self.parent_button)
+        layout.addWidget(self.refresh_button)
+        layout.addWidget(self.address_bar, 1)  # アドレスバーを拡張
+    
+    def set_path(self, path):
+        """パスを設定"""
+        self._current_path = path
+        self.address_bar.set_path(path)
+    
+    def get_path(self):
+        """現在のパスを取得"""
+        return self._current_path
+    
+    def keyPressEvent(self, event):
+        """キーボードショートカット"""
+        if event.key() == Qt.Key_F5:
+            self.refresh_requested.emit()
+        elif event.key() == Qt.Key_Home and event.modifiers() == Qt.ControlModifier:
+            self.home_folder_requested.emit()
+        elif event.key() == Qt.Key_Up and event.modifiers() == Qt.AltModifier:
+            self.parent_folder_requested.emit()
+        else:
+            super().keyPressEvent(event)
 
 
 class AddressBarWidget(QWidget):

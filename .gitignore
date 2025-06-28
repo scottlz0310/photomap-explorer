@@ -18,7 +18,8 @@ venv/
 *.ini
 dist/
 build/
-devel/
-idea/
-backup_phase5_2_*/
-backup/
+
+# Package metadata and distribution files
+*.egg-info/
+*.whl
+*.tar.gz

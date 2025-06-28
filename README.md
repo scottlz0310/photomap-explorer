@@ -301,6 +301,11 @@ python -m black .
 - ❓ [FAQ](docs/faq.md) - よくある質問
 - 🐛 [Troubleshooting](docs/troubleshooting.md) - トラブルシューティング
 
+### サポート・問題報告
+- 🐛 [既知の問題](docs/KNOWN_ISSUES.md) - 既知の制限事項・回避策
+- 📝 [バグ報告テンプレート](docs/BUG_REPORT_TEMPLATE.md) - 標準化された報告フォーマット
+- 📋 [GitHub Issues](https://github.com/scottlz0310/photomap-explorer/issues) - バグ報告・機能要望
+
 ---
 
 ## ⚠️ 制限事項・既知の問題
@@ -309,6 +314,12 @@ python -m black .
 - GPS情報のない画像は地図表示されません
 - 一部のスマートフォンの非標準GPS形式は未対応
 - 大量画像（1000枚以上）での表示パフォーマンス制限
+
+### 🐛 問題を見つけた場合
+問題やバグを発見された場合は、以下をご利用ください：
+- **[既知の問題一覧](docs/KNOWN_ISSUES.md)** - 既に報告済みの問題と回避策
+- **[GitHub Issues](https://github.com/scottlz0310/photomap-explorer/issues)** - 新しい問題の報告
+- **[バグ報告テンプレート](docs/BUG_REPORT_TEMPLATE.md)** - 効果的な報告方法
 
 ### 今後の改善予定
 - 🌐 **国際化対応**: 多言語サポート（v2.1予定）
@@ -350,11 +361,15 @@ Clean Architectureによる大規模リファクタリングが成功し、よ�
 
 ## 🔗 関連リンク
 
+### プロジェクト管理
 - 🏠 [プロジェクトホーム](https://github.com/scottlz0310/photomap-explorer)
-- 📋 [Issues](https://github.com/scottlz0310/photomap-explorer/issues)
-- 🔀 [Pull Requests](https://github.com/scottlz0310/photomap-explorer/pulls)
-- 📦 [Releases](https://github.com/scottlz0310/photomap-explorer/releases)
-- 📊 [Project Board](https://github.com/scottlz0310/photomap-explorer/projects)
+- � [Releases](https://github.com/scottlz0310/photomap-explorer/releases)
+- � [Project Board](https://github.com/scottlz0310/photomap-explorer/projects)
+
+### 開発・サポート
+- � [Issues](https://github.com/scottlz0310/photomap-explorer/issues) - バグ報告・機能要望
+- � [Pull Requests](https://github.com/scottlz0310/photomap-explorer/pulls) - コード貢献
+- 🐛 [既知の問題](docs/KNOWN_ISSUES.md) - 既知の制限事項・回避策
 
 **PhotoMap Explorer 2.0.0** - GPS付き画像から撮影地点を地図に自動表示  
 *Clean Architecture で進化した高性能・高品質な画像地図ビューア*

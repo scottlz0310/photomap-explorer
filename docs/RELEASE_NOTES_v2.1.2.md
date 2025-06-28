@@ -20,7 +20,7 @@
 - **安全な配布物**: プライバシーセーフなEXE・パッケージファイルを生成
 
 ### 📚 ドキュメント更新
-- **新しいスクリーンショット**: 台湾・九份の写真を使用した美しいデモ画像
+- **新しいスクリーンショット**: GPS付きサンプル画像を使用した美しいデモ画像
 - **README.md更新**: 現在の実装状況を正確に反映
 - **既知の問題**: KNOWN_ISSUES.mdで制限事項を明確化
 - **Pending_features.md**: 未実装機能を正確に記載
@@ -143,8 +143,8 @@ python main.py
 
 ## 🌍 サンプル画像について
 
-リリースのスクリーンショットには、台湾・九份で撮影された美しい風景写真を使用しています。
-GPS情報付きの画像を使用することで、PhotoMap Explorerの機能をわかりやすくデモンストレーションしています。
+リリースのスクリーンショットには、[GeoImgr Sample Photos](https://www.geoimgr.com/sample-photos.html)から提供された台湾・九份の美しい風景写真を使用しています。
+GPS情報付きのサンプル画像を使用することで、PhotoMap Explorerの機能をわかりやすくデモンストレーションしています。
 
 ---
 
@@ -159,7 +159,7 @@ MIT License
 
 - **開発・ドキュメント**: scottlz0310（GitHub: [@scottlz0310](https://github.com/scottlz0310))
 - **コーディングサポート**: Microsoft Copilot
-- **スクリーンショット画像**: フリー素材を使用
+- **スクリーンショット画像**: [GeoImgr Sample Photos](https://www.geoimgr.com/sample-photos.html) 提供
 
 ---
 

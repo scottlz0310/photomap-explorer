@@ -112,6 +112,32 @@ class FinalIntegrationWindow(QMainWindow):
     
     def _create_new_components_tab(self):
         """新UIコンポーネントタブ作成"""
+        try:
+            # 機能的な新UIを埋め込み
+            from presentation.views.functional_new_main_view import FunctionalNewMainWindow
+            
+            # 新UIのメインウィンドウを作成
+            new_ui_window = FunctionalNewMainWindow()
+            
+            # メインウィンドウのセントラルウィジェットを取得
+            new_ui_widget = new_ui_window.centralWidget()
+            
+            if new_ui_widget:
+                # 親から切り離してタブに追加
+                new_ui_widget.setParent(None)
+                self.tab_widget.addTab(new_ui_widget, "🚀 新UI (機能版)")
+                print("✅ 新UIタブ作成成功")
+            else:
+                # フォールバック: コンポーネント別テスト
+                self._create_component_test_tab()
+                
+        except Exception as e:
+            print(f"❌ 新UIタブ作成エラー: {e}")
+            # フォールバック: コンポーネント別テスト
+            self._create_component_test_tab()
+    
+    def _create_component_test_tab(self):
+        """コンポーネント別テストタブ作成（フォールバック）"""
         container = QWidget()
         layout = QVBoxLayout(container)
         

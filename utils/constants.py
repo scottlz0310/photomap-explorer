@@ -2,8 +2,12 @@
 
 # アプリケーション情報
 APP_NAME = "PhotoMap Explorer"
-APP_VERSION = "1.1.2"
+APP_VERSION = "2.0.0"
 APP_AUTHOR = "scottlz0310"
+
+# Clean Architecture用の定数
+APPLICATION_NAME = APP_NAME
+APPLICATION_VERSION = APP_VERSION
 
 # ファイル関連定数
 SUPPORTED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp", ".gif")

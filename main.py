@@ -2,10 +2,10 @@
 PhotoMap Explorer メインエントリーポイント
 
 Usage:
-    python main.py              # デフォルト（レガシーUI）
-    python main.py --ui=new     # 新UI（Clean Architecture）
+    python main.py              # デフォルト（機能的新UI）
+    python main.py --ui=new     # 新UI（機能版Clean Architecture）
     python main.py --ui=legacy  # レガシーUI（従来版）
-    python main.py --ui=hybrid  # ハイブリッド（両方表示）
+    python main.py --ui=hybrid  # ハイブリッド（両方表示・修正版）
 """
 
 import sys
@@ -24,17 +24,18 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 UI選択例:
-  python main.py --ui=new     # 新しいClean ArchitectureUI
+  python main.py              # デフォルト（機能的新UI）
+  python main.py --ui=new     # 機能的新UI（Clean Architecture）
   python main.py --ui=legacy  # 従来のレガシーUI
-  python main.py --ui=hybrid  # ハイブリッド比較表示
+  python main.py --ui=hybrid  # ハイブリッド比較表示（修正版）
         """
     )
     
     parser.add_argument(
         '--ui', 
         choices=['new', 'legacy', 'hybrid'], 
-        default='legacy',
-        help='使用するUIアーキテクチャ (default: legacy)'
+        default='new',
+        help='使用するUIアーキテクチャ (default: new)'
     )
     
     parser.add_argument(
@@ -49,30 +50,43 @@ UI選択例:
 def launch_new_ui(debug=False):
     """新UI（Clean Architecture）を起動"""
     try:
-        # 最適化版を優先して試行
+        # 機能的な新UIを最優先
         try:
-            from presentation.views.final_optimized_main_view import OptimizedFinalMainView
-            window = OptimizedFinalMainView()
+            from presentation.views.functional_new_main_view import FunctionalNewMainWindow
+            window = FunctionalNewMainWindow()
             window.show()
             
             if debug:
-                print("✅ 新UI（最終最適化版）起動成功")
-                window.show_status_message("新UI（最終最適化版）で起動しました")
+                print("✅ 新UI（機能版）起動成功")
+                window.show_status_message("新UI（機能版Clean Architecture）で起動しました")
             
             return window
             
         except ImportError:
-            # フォールバック: 標準版
-            from presentation.views.simple_main_view import SimpleNewMainWindow
-            
-            window = SimpleNewMainWindow()
-            window.show()
-            
-            if debug:
-                print("✅ 新UI（Clean Architecture）起動成功")
-                window.show_status_message("新UI（Clean Architecture）で起動しました")
-            
-            return window
+            # フォールバック1: 最適化版
+            try:
+                from presentation.views.final_optimized_main_view import OptimizedFinalMainView
+                window = OptimizedFinalMainView()
+                window.show()
+                
+                if debug:
+                    print("✅ 新UI（最終最適化版）起動成功")
+                    window.show_status_message("新UI（最終最適化版）で起動しました")
+                
+                return window
+                
+            except ImportError:
+                # フォールバック2: 標準版
+                from presentation.views.simple_main_view import SimpleNewMainWindow
+                
+                window = SimpleNewMainWindow()
+                window.show()
+                
+                if debug:
+                    print("✅ 新UI（Clean Architecture）起動成功")
+                    window.show_status_message("新UI（Clean Architecture）で起動しました")
+                
+                return window
         
     except Exception as e:
         if debug:
@@ -156,10 +170,11 @@ def main():
         
         if args.debug:
             print("📋 使用方法:")
-            print("  --ui=new     新しいClean ArchitectureUI")
-            print("  --ui=legacy  従来のレガシーUI")
-            print("  --ui=hybrid  ハイブリッド比較表示")
-            print("  --debug      デバッグ情報表示")
+            print("  python main.py        機能的新UI（デフォルト）")
+            print("  --ui=new              機能的新UI（Clean Architecture）")
+            print("  --ui=legacy           従来のレガシーUI")
+            print("  --ui=hybrid           ハイブリッド比較表示（修正版）")
+            print("  --debug               デバッグ情報表示")
         
         # イベントループ開始
         sys.exit(app.exec_())

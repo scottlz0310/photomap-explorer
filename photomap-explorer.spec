@@ -10,7 +10,7 @@ from pathlib import Path
 block_cipher = None
 
 # プロジェクトのルートディレクトリ
-root_dir = Path(__file__).parent
+root_dir = Path.cwd()
 
 # データファイルとリソースファイルの追加
 datas = [
@@ -59,7 +59,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='PhotoMapExplorer',
+    name='photomap-explorer',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -81,5 +81,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='PhotoMapExplorer',
+    name='photomap-explorer',
 )

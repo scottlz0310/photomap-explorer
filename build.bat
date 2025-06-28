@@ -34,12 +34,12 @@ echo PyInstallerでビルド実行中...
 pyinstaller photomap-explorer.spec
 
 REM ビルド結果の確認
-if exist "dist\PhotoMapExplorer\PhotoMapExplorer.exe" (
+if exist "dist\photomap-explorer\photomap-explorer.exe" (
     echo.
     echo ✅ ビルドが正常に完了しました！
-    echo 📁 実行ファイル: dist\PhotoMapExplorer\PhotoMapExplorer.exe
+    echo 📁 実行ファイル: dist\photomap-explorer\photomap-explorer.exe
     echo.
-    echo 配布用フォルダ: dist\PhotoMapExplorer\
+    echo 配布用フォルダ: dist\photomap-explorer\
     echo このフォルダ全体をコピーして配布できます。
 ) else (
     echo.

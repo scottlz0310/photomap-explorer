@@ -22,12 +22,12 @@ def read_requirements():
 setup(
     name="photomap-explorer",
     version="2.1.2",
-    author="菅原浩恭",
-    author_email="hiroyasu@sugaraweb.com",  # 実際のメールアドレスに変更してください
+    author="scottlz0310",
+    author_email="contact@photomap-explorer.dev",
     description="GPS付き画像から撮影地点を地図に自動表示する軽量ツール",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/sugawara-hiroyasu/PhotoMapExplorer",  # GitHubリポジトリURL
+    url="https://github.com/scottlz0310/photomap-explorer",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -70,9 +70,9 @@ setup(
     include_package_data=True,
     keywords="gps exif map photo image viewer photography geolocation",
     project_urls={
-        "Bug Reports": "https://github.com/sugawara-hiroyasu/PhotoMapExplorer/issues",
-        "Documentation": "https://github.com/sugawara-hiroyasu/PhotoMapExplorer/blob/main/README.md",
-        "Source": "https://github.com/sugawara-hiroyasu/PhotoMapExplorer",
-        "Changelog": "https://github.com/sugawara-hiroyasu/PhotoMapExplorer/blob/main/CHANGELOG.md",
+        "Bug Reports": "https://github.com/scottlz0310/photomap-explorer/issues",
+        "Documentation": "https://github.com/scottlz0310/photomap-explorer/blob/main/README.md",
+        "Source": "https://github.com/scottlz0310/photomap-explorer",
+        "Changelog": "https://github.com/scottlz0310/photomap-explorer/blob/main/CHANGELOG.md",
     },
 )

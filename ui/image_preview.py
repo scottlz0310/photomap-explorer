@@ -31,5 +31,5 @@ class ImagePreviewView(QGraphicsView):
 
 
 def create_image_preview():
-    """画像プレビューウィジェットを作成"""
+    """画像プレビューウィジェットを作成して返す関数"""
     return ImagePreviewView()

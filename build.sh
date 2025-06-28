@@ -38,12 +38,12 @@ echo "PyInstallerでビルド実行中..."
 pyinstaller photomap-explorer.spec
 
 # ビルド結果の確認
-if [ -f "dist/PhotoMapExplorer/PhotoMapExplorer.exe" ]; then
+if [ -f "dist/photomap-explorer/photomap-explorer.exe" ]; then
     echo ""
     echo "✅ ビルドが正常に完了しました！"
-    echo "📁 実行ファイル: dist/PhotoMapExplorer/PhotoMapExplorer.exe"
+    echo "📁 実行ファイル: dist/photomap-explorer/photomap-explorer.exe"
     echo ""
-    echo "配布用フォルダ: dist/PhotoMapExplorer/"
+    echo "配布用フォルダ: dist/photomap-explorer/"
     echo "このフォルダ全体をコピーして配布できます。"
 else
     echo ""

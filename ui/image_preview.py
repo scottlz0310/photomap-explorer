@@ -28,3 +28,8 @@ class ImagePreviewView(QGraphicsView):
             factor = 1.25 if zoom_in else 0.8
             self._zoom_factor *= factor
             self.scale(factor, factor)
+
+
+def create_image_preview():
+    """画像プレビューウィジェットを作成"""
+    return ImagePreviewView()

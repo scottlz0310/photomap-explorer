@@ -57,6 +57,23 @@ def extract_gps_coords(image_path):
         return None
 
 def generate_map_html(lat, lon):
+    """指定された緯度経度の地図HTMLを生成"""
+    import io
+    
+    # Foliumマップを作成
+    map_obj = folium.Map(location=[lat, lon], zoom_start=15)
+    folium.Marker([lat, lon], tooltip="画像の位置").add_to(map_obj)
+    
+    # BytesIOを使用してメモリ内でHTMLを生成
+    output = io.BytesIO()
+    map_obj.save(output, close_file=False)
+    html_content = output.getvalue().decode('utf-8')
+    output.close()
+    
+    return html_content
+
+def generate_map_file(lat, lon):
+    """指定された緯度経度の地図HTMLファイルを生成（レガシー互換）"""
     map_obj = folium.Map(location=[lat, lon], zoom_start=15)
     folium.Marker([lat, lon], tooltip="画像の位置").add_to(map_obj)
     output_path = os.path.abspath("map.html")

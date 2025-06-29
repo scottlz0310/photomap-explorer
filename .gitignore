@@ -18,5 +18,8 @@ venv/
 *.ini
 dist/
 build/
-devel/
-idea/
+
+# Package metadata and distribution files
+*.egg-info/
+*.whl
+*.tar.gz

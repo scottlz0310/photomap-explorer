@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
+import os
 
 def load_pixmap(image_path):
     """画像パスからQPixmapを生成して返すユーティリティ関数"""
@@ -11,18 +12,29 @@ def create_thumbnail_list(thumbnail_clicked_callback):
     thumbnail_list = QListWidget()
     thumbnail_list.setIconSize(QSize(128, 128))  # サムネイルサイズを設定
     thumbnail_list.setViewMode(QListWidget.IconMode)  # アイコン表示モード
-    thumbnail_list.setResizeMode(QListWidget.Adjust)
+    thumbnail_list.setResizeMode(QListWidget.Adjust)  # 複数列表示対応
     thumbnail_list.setMovement(QListWidget.Static)
-    thumbnail_list.setSpacing(10)  # アイコン間隔
+    thumbnail_list.setSpacing(8)  # アイコン間隔を調整
+    thumbnail_list.setWordWrap(True)  # テキスト折り返し有効
+    thumbnail_list.setUniformItemSizes(True)  # パフォーマンス向上
     thumbnail_list.itemClicked.connect(thumbnail_clicked_callback)  # クリック時のコールバックを接続
 
     return thumbnail_list
 
 def add_thumbnail(thumbnail_list, image_path):
     """サムネイルをサムネイル一覧に追加"""
-    icon = QIcon(image_path)  # 画像をアイコンとして読み込み
-    item = QListWidgetItem(icon, image_path.split("/")[-1])  # ファイル名を表示
-    thumbnail_list.addItem(item)
+    try:
+        icon = QIcon(image_path)  # 画像をアイコンとして読み込み
+        # ファイル名のみを表示（プラットフォーム対応）
+        filename = os.path.basename(image_path)
+        item = QListWidgetItem(icon, filename)
+        # フルパスをQt.UserRoleで保存
+        item.setData(Qt.UserRole, image_path)
+        thumbnail_list.addItem(item)
+        return True
+    except Exception as e:
+        print(f"サムネイル追加エラー: {e}")
+        return False
 
 def set_thumbnail_size(thumbnail_list, size_label):
     """サムネイルサイズを 'small', 'medium', 'large' で切り替え"""

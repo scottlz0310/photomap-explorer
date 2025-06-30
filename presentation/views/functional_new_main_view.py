@@ -40,6 +40,10 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
         self.current_images = []
         self.selected_image = None
         
+        # プレビューモード状態管理
+        self._preview_mode = False
+        self._preview_folder = None
+        
         # 最大化状態管理
         self.maximized_state = None  # 'image', 'map', None
         self.main_splitter = None
@@ -534,6 +538,10 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
     def _load_folder(self, folder_path):
         """フォルダ読み込み"""
         try:
+            # プレビューモードを終了
+            self._preview_mode = False
+            self._preview_folder = None
+            
             # パスを正規化
             folder_path = os.path.normpath(folder_path)
             self.current_folder = folder_path
@@ -960,7 +968,7 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
             logging.error(f"マップ更新詳細エラー: {e}")
     
     def _on_folder_item_clicked(self, item):
-        """フォルダ項目クリック時の処理"""
+        """フォルダ項目クリック時の処理（下階層サムネイル表示対応）"""
         try:
             item_path = item.data(Qt.UserRole)
             if not item_path:
@@ -968,6 +976,16 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
             
             # パス情報をステータスバーに表示
             self.show_status_message(f"📌 選択: {item_path}")
+            
+            # フォルダの場合は下階層のサムネイルを表示
+            if os.path.isdir(item_path):
+                self._preview_folder_thumbnails(item_path)
+            elif os.path.isfile(item_path):
+                # ファイルの場合は通常の画像選択処理
+                file_ext = Path(item_path).suffix.lower()
+                if file_ext in {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}:
+                    self.selected_image = item_path
+                    self._display_image(item_path)
             
         except Exception as e:
             self.show_status_message(f"❌ 項目選択エラー: {e}")
@@ -1687,3 +1705,108 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
                     
         except Exception as e:
             print(f"全体テーマ強制更新エラー: {e}")
+    
+    def _preview_folder_thumbnails(self, folder_path):
+        """フォルダ内の画像をサムネイルエリアにプレビュー表示"""
+        try:
+            if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+                self.show_status_message("❌ 有効なフォルダではありません")
+                return
+            
+            # 画像ファイルを検索
+            image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
+            image_files = []
+            
+            folder = Path(folder_path)
+            try:
+                for file_path in folder.iterdir():
+                    if file_path.is_file() and file_path.suffix.lower() in image_extensions:
+                        image_files.append(str(file_path))
+            except PermissionError:
+                self.show_status_message(f"❌ アクセス権限がありません: {folder_path}")
+                return
+            
+            # サムネイルリストを取得
+            thumbnail_list = self.thumbnail_list
+            if thumbnail_list is None:
+                # サムネイルリストが見つからない場合の再取得
+                left_panel_widgets = self.findChildren(QWidget)
+                for widget in left_panel_widgets:
+                    if hasattr(widget, 'add_thumbnail') or 'thumbnail' in str(type(widget)).lower():
+                        thumbnail_list = widget
+                        break
+            
+            if thumbnail_list is None:
+                self.show_status_message("❌ サムネイルエリアが見つかりません")
+                return
+            
+            # サムネイルリストをクリア
+            if hasattr(thumbnail_list, 'clear_thumbnails'):
+                thumbnail_list.clear_thumbnails()
+            elif hasattr(thumbnail_list, 'clear'):
+                thumbnail_list.clear()
+            
+            # プレビュー用のサムネイルを追加（最大30枚まで）
+            added_count = 0
+            max_preview_count = 30
+            
+            for image_path in image_files[:max_preview_count]:
+                try:
+                    if hasattr(thumbnail_list, 'add_thumbnail'):
+                        success = thumbnail_list.add_thumbnail(image_path)
+                        if success:
+                            added_count += 1
+                    elif hasattr(thumbnail_list, 'addItem'):
+                        # QListWidget系の場合
+                        from PyQt5.QtWidgets import QListWidgetItem
+                        from PyQt5.QtGui import QIcon, QPixmap
+                        from PyQt5.QtCore import QSize
+                        
+                        # サムネイル画像を作成
+                        try:
+                            pixmap = QPixmap(image_path)
+                            if not pixmap.isNull():
+                                # サムネイルサイズに縮小
+                                scaled_pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                                
+                                # アイテムを作成
+                                item = QListWidgetItem()
+                                item.setIcon(QIcon(scaled_pixmap))
+                                item.setText(os.path.basename(image_path))
+                                item.setData(Qt.UserRole, image_path)
+                                item.setToolTip(f"プレビュー: {os.path.basename(image_path)}")
+                                
+                                # リストに追加
+                                thumbnail_list.addItem(item)
+                                added_count += 1
+                        except Exception as thumb_error:
+                            print(f"サムネイル作成エラー: {thumb_error}")
+                            continue
+                    
+                except Exception as e:
+                    print(f"サムネイル追加エラー: {e}")
+                    continue
+                
+                # 処理が重くならないよう、少しずつ処理
+                if added_count % 10 == 0:
+                    QApplication.instance().processEvents()
+            
+            # 結果をステータスバーに表示
+            total_images = len(image_files)
+            folder_name = os.path.basename(folder_path)
+            
+            if added_count > 0:
+                self.show_status_message(
+                    f"🔍 プレビュー表示: {folder_name} ({added_count}/{total_images}枚)"
+                )
+            else:
+                self.show_status_message(f"📁 画像が見つかりません: {folder_name}")
+            
+            # プレビュー状態をマーク（現在のフォルダとは別のプレビュー中であることを示す）
+            self._preview_mode = True
+            self._preview_folder = folder_path
+            
+        except Exception as e:
+            self.show_status_message(f"❌ フォルダプレビューエラー: {e}")
+            import logging
+            logging.error(f"フォルダプレビュー詳細エラー: {e}")

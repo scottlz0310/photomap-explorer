@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photomap-explorer"
+version = "2.1.2"
+description = "A cross-platform photo mapping application"
+requires-python = ">=3.8"
+dependencies = [
+    "PyQt5>=5.15.0",
+    "PyQtWebEngine>=5.15.0", 
+    "folium>=0.12.1",
+    "exifread>=3.3.1"
+]
+
+[tool.setuptools]
+packages = ["ui", "logic", "presentation", "domain", "infrastructure", "window"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.html", "*.css", "*.js"]
+
+[tool.pylsp-mypy]
+enabled = true
+live_mode = true
+strict = false

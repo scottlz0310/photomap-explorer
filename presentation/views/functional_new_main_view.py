@@ -573,11 +573,12 @@ class FunctionalNewMainWindow(QMainWindow, ThemeAwareMixin):
             # サムネイルリストの参照が失われている場合、再取得を試行
             if thumbnail_list is None:
                 try:
-                    from ui.thumbnail_list import ThumbnailListWidget
-                    thumbnail_widgets = self.findChildren(ThumbnailListWidget)
-                    if thumbnail_widgets:
-                        thumbnail_list = thumbnail_widgets[0]
-                        self.thumbnail_list = thumbnail_list  # 参照を修復
+                    # thumbnail_listはcreate_thumbnail_list()で作成されているため、
+                    # findChildren()ではなく、既存の参照を使用
+                    thumbnail_list = getattr(self, 'thumbnail_list', None)
+                    if thumbnail_list:
+                        # 追加の処理があればここに記述
+                        pass
                 except Exception:
                     pass
             

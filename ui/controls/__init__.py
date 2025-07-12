@@ -38,8 +38,7 @@ from .address_bar import (
 from .toolbar import (
     NavigationControls,
     UtilityControls,
-    IntegratedToolbar,
-    create_controls  # 後方互換性用関数
+    IntegratedToolbar
 )
 
 # 統合コントロールクラス
@@ -239,3 +238,34 @@ def create_modern_controls(parent=None):
         ModernControlsContainer: モダンコントロールコンテナーインスタンス
     """
     return ModernControlsContainer(parent)
+
+
+def create_controls(on_address_changed_callback=None, on_parent_button_callback=None):
+    """
+    後方互換性のためのcreate_controls関数
+    
+    元の ui/controls.py の create_controls 関数と同じインターフェースを提供
+    
+    Args:
+        on_address_changed_callback: アドレス変更時のコールバック
+        on_parent_button_callback: 親フォルダボタンクリック時のコールバック
+        
+    Returns:
+        tuple: (controls_widget, address_bar, parent_button)
+    """
+    # 統合アドレスバーを作成
+    controls_container = IntegratedAddressBar()
+    
+    # コールバック設定
+    if on_address_changed_callback:
+        controls_container.path_changed.connect(on_address_changed_callback)
+    
+    # 親ボタンの参照を取得（統合アドレスバー内のツールバーから）
+    parent_button = None
+    toolbar = controls_container.get_toolbar()
+    if toolbar and hasattr(toolbar, 'parent_button'):
+        parent_button = toolbar.parent_button
+        if on_parent_button_callback and parent_button:
+            parent_button.clicked.connect(on_parent_button_callback)
+    
+    return controls_container, controls_container, parent_button

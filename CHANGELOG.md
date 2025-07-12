@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.2.0] - 2025-07-12
+
+### Major Refactoring
+- **第2回大規模リファクタリング完了**: Phase 1, Phase 2 & Phase 3実施
+- **アーキテクチャ改善**: 単一責任原則に従ったモジュール分割
+- **保守性向上**: 開発効率と品質の大幅改善
+
+### Changed
+#### Phase 1: メインビュー分割
+- `presentation/views/functional_new_main_view.py` (1,689行) → 11モジュールに分割
+- **ui_components/**:
+  - `main_window_core.py` (220行) - メインウィンドウコア
+  - `left_panel_manager.py` (120行) - 左パネル管理
+  - `right_panel_manager.py` (180行) - 右パネル管理
+  - `address_bar_manager.py` (300行) - アドレスバー管理
+  - `maximize_handler.py` (370行) - 最大化ハンドラ
+- **event_handlers/**:
+  - `folder_event_handler.py` (225行) - フォルダイベント処理
+  - `image_event_handler.py` (290行) - 画像イベント処理
+  - `theme_event_handler.py` (250行) - テーマイベント処理
+- **display_managers/**:
+  - `image_display_manager.py` (390行) - 画像表示管理
+  - `map_display_manager.py` (350行) - マップ表示管理
+  - `status_display_manager.py` (320行) - ステータス表示管理
+
+#### Phase 2: UIコントロール分割
+- `ui/controls.py` (424行) → 8モジュールに分割
+- **address_bar/**: 
+  - `address_bar_core.py` (500行) - コア機能
+  - `breadcrumb_manager.py` (499行) - ブレッドクラム管理  
+  - `text_input_handler.py` (460行) - テキスト入力処理
+- **toolbar/**:
+  - `navigation_controls.py` (409行) - ナビゲーション制御
+  - `utility_controls.py` (558行) - ユーティリティ制御
+- **統合**: 完全な後方互換性維持
+
+#### Phase 3: テーマシステム分割
+- `presentation/themes/theme_manager.py` (436行) → 7モジュールに分割
+- **core/**:
+  - `theme_engine.py` (444行) - テーマエンジン・キャッシュ・モード管理
+  - `theme_factory.py` (446行) - テーマ作成・バリデーション・カスタマイズ
+- **system/**:
+  - `system_theme_detector.py` (475行) - OS テーマ検出（Windows/macOS/Linux）
+  - `theme_settings.py` (491行) - 設定永続化・インポート/エクスポート
+- **definitions/**:
+  - `light_theme.py` (491行) - ライトテーマ定義・バリエーション
+  - `dark_theme.py` (533行) - ダークテーマ定義・高コントラスト
+
+### Improved
+- **単一責任原則**: 各モジュールが明確な責任を持つ
+- **理解容易性**: 平均221行の適切なファイルサイズ（74%改善）
+- **テスト容易性**: モジュール分割によるユニットテスト改善
+- **拡張性**: 新機能追加の容易性
+- **チーム開発対応**: ファイル分割による競合減少
+- **保守性**: 巨大ファイル問題の完全解決（最大1,689行 → 558行）
+
+### Performance
+- **総行数**: 元の2,549行 → 5,760行（機能拡張込み）
+- **ファイル数**: 3ファイル → 26ファイル
+- **責任分離**: UI・テーマ・イベント・表示機能の完全分離
+
+---
+
 ## [2.1.2] - 2025-06-28
 
 ### Release

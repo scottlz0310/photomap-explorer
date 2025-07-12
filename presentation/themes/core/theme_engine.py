@@ -42,7 +42,7 @@ class ThemeEngine(QObject):
         self.is_loading = False
         
         # テーマデータストレージ
-        self.theme_registry: Dict[ThemeMode, Dict[str, Any]] = {}
+        self.theme_registry: Dict[str, Dict[str, Any]] = {}
         self.custom_themes: Dict[str, Dict[str, Any]] = {}
         
         # キャッシュ
@@ -53,12 +53,12 @@ class ThemeEngine(QObject):
         self.enable_caching = True
         self.enable_transitions = True
         
-    def register_theme(self, theme_mode: ThemeMode, theme_data: Dict[str, Any]) -> bool:
+    def register_theme(self, theme_name: str, theme_data: Dict[str, Any]) -> bool:
         """
         テーマをエンジンに登録
         
         Args:
-            theme_mode: テーマモード
+            theme_name: テーマ名（文字列）
             theme_data: テーマ定義データ
             
         Returns:
@@ -67,17 +67,17 @@ class ThemeEngine(QObject):
         try:
             # テーマデータの基本検証
             if not self._validate_theme_data(theme_data):
-                logging.error(f"テーマデータ検証失敗: {theme_mode}")
+                logging.error(f"テーマデータ検証失敗: {theme_name}")
                 return False
             
             # テーマ登録
-            self.theme_registry[theme_mode] = theme_data.copy()
+            self.theme_registry[theme_name] = theme_data.copy()
             
-            logging.info(f"テーマ登録完了: {theme_mode.value}")
+            logging.info(f"テーマ登録完了: {theme_name}")
             return True
             
         except Exception as e:
-            logging.error(f"テーマ登録エラー: {theme_mode} - {e}")
+            logging.error(f"テーマ登録エラー: {theme_name} - {e}")
             return False
     
     def register_custom_theme(self, theme_name: str, theme_data: Dict[str, Any]) -> bool:
@@ -137,7 +137,7 @@ class ThemeEngine(QObject):
         """現在のテーマモードを取得"""
         return self.current_theme
     
-    def get_available_themes(self) -> List[ThemeMode]:
+    def get_available_themes(self) -> List[str]:
         """利用可能なテーマモード一覧を取得"""
         return list(self.theme_registry.keys())
     

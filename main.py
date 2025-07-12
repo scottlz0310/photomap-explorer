@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import QApplication
-from presentation.views.functional_new_main_view import FunctionalNewMainWindow
+from presentation.views.functional_main_window.refactored_main_window import RefactoredFunctionalMainWindow
 
 def setup_qt_environment():
     """Qt環境の設定"""
@@ -37,6 +37,6 @@ if __name__ == "__main__":
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     
     app = QApplication(sys.argv)
-    window = FunctionalNewMainWindow()
+    window = RefactoredFunctionalMainWindow()
     window.show()
     sys.exit(app.exec_())

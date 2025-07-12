@@ -6,7 +6,7 @@ Main Window Core
 
 import os
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSplitter, QHBoxLayout, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 # コントロールのインポート  
@@ -25,7 +25,10 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     
     def __init__(self):
         QMainWindow.__init__(self)
-        ThemeAwareMixin.__init__(self)
+        try:
+            ThemeAwareMixin.__init__(self)
+        except Exception as e:
+            print(f"ThemeAwareMixin初期化エラー: {e}")
         
         # ウィンドウ基本設定
         self.setWindowTitle("PhotoMap Explorer - 新UI (Clean Architecture) v2.2.0")
@@ -213,17 +216,28 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     
     def finalize_setup(self):
         """セットアップの最終処理"""
-        # テーマコンポーネント登録
-        self.register_theme_component(self.folder_btn, "button")
-        self.register_theme_component(self.theme_toggle_btn, "button") 
-        self.register_theme_component(self.parent_button, "button")
-        self.register_theme_component(self.toolbar_widget, "panel")
+        # テーマコンポーネント登録（一時的にスキップ）
+        try:
+            if hasattr(self, 'register_theme_component'):
+                self.register_theme_component(self.folder_btn, "button")
+                self.register_theme_component(self.theme_toggle_btn, "button") 
+                self.register_theme_component(self.parent_button, "button")
+                self.register_theme_component(self.toolbar_widget, "panel")
+        except Exception as e:
+            print(f"テーマコンポーネント登録エラー: {e}")
         
         # 初期テーマ設定
-        if self.theme_event_handler:
-            self.theme_event_handler.update_theme_button()
+        try:
+            if self.theme_event_handler:
+                self.theme_event_handler.update_theme_button()
+        except Exception as e:
+            print(f"テーマイベントハンドラーエラー: {e}")
         
-        self.apply_theme()
+        try:
+            if hasattr(self, 'apply_theme'):
+                self.apply_theme()
+        except Exception as e:
+            print(f"テーマ適用エラー: {e}")
         
         # アドレスバーの遅延テーマ適用
         from PyQt5.QtCore import QTimer

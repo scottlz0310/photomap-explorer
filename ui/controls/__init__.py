@@ -26,6 +26,7 @@ toolbar/
 """
 
 # アドレスバー関連のインポート
+import logging
 from .address_bar import (
     AddressBarCore,
     BreadcrumbManager,
@@ -260,12 +261,15 @@ def create_controls(on_address_changed_callback=None, on_parent_button_callback=
     if on_address_changed_callback:
         controls_container.path_changed.connect(on_address_changed_callback)
     
-    # 親ボタンの参照を取得（統合アドレスバー内のツールバーから）
+    # 親ボタンの参照を取得（NavigationControlsを個別作成）
     parent_button = None
-    toolbar = controls_container.get_toolbar()
-    if toolbar and hasattr(toolbar, 'parent_button'):
-        parent_button = toolbar.parent_button
+    try:
+        from .toolbar.navigation_controls import NavigationControls
+        nav_controls = NavigationControls()
+        parent_button = nav_controls.parent_button
         if on_parent_button_callback and parent_button:
             parent_button.clicked.connect(on_parent_button_callback)
+    except Exception as e:
+        logging.warning(f"親ボタン設定エラー: {e}")
     
     return controls_container, controls_container, parent_button

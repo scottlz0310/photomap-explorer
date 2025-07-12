@@ -1,4 +1,21 @@
 {
   "theme": "dark",
-  "version": "2.1.0"
+  "version": "2.2.0",
+  "primaryColor": "#222831",
+  "accentColor": "#00adb5",
+  "backgroundColor": "#1a1a1a",
+  "textColor": "#eeeeee",
+  "button": {
+    "background": "#393e46",
+    "text": "#eeeeee",
+    "hover": "#00adb5"
+  },
+  "panel": {
+    "background": "#23272f",
+    "border": "#393e46"
+  },
+  "font": {
+    "family": "'Segoe UI', 'Meiryo', 'sans-serif'",
+    "size": 14
+  }
 }

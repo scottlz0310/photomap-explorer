@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QIcon, QCursor
 from presentation.themes.theme_mixin import ThemeAwareMixin
 import logging
 from typing import Optional, List
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class UtilityControls(QWidget, ThemeAwareMixin):

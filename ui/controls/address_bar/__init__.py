@@ -18,6 +18,7 @@ from .text_input_handler import TextInputHandler
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
 import logging
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class IntegratedAddressBar(QWidget):

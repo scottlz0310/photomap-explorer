@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QKeySequence
 import os
 import logging
 from typing import List, Optional
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class TextInputHandler(QObject):

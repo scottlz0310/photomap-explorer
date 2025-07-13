@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from presentation.themes.theme_mixin import ThemeAwareMixin
+from utils.debug_logger import debug, info, warning, error, verbose
 import os
 import logging
 from typing import Optional
@@ -26,6 +27,10 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # ThemeAwareMixinの初期化を明示的に呼び出し
+        ThemeAwareMixin.__init__(self)
+        
         self.current_path = ""
         self.is_edit_mode = False
         
@@ -65,8 +70,23 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             # 初期表示
             self.setText("")  # 初期パス
             
+            # 初期テーマを適用
+            self._apply_edit_button_theme()
+            
+            # テーマエンジンが遅延初期化される場合に備えて遅延適用も設定
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(500, self._delayed_theme_update)
+            
         except Exception as e:
             logging.error(f"アドレスバーUI初期化エラー: {e}")
+    
+    def _delayed_theme_update(self):
+        """遅延テーマ更新（テーマエンジンの初期化完了後）"""
+        try:
+            debug("アドレスバー遅延テーマ更新を実行")
+            self._apply_edit_button_theme()
+        except Exception as e:
+            logging.error(f"アドレスバー遅延テーマ更新エラー: {e}")
     
     def _create_breadcrumb_widget(self):
         """ブレッドクラムウィジェットを作成"""
@@ -111,8 +131,72 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             edit_font.setPointSize(12)
             self.edit_button.setFont(edit_font)
             
+            # テーマスタイルを適用
+            self._apply_edit_button_theme()
+            
         except Exception as e:
             logging.error(f"編集ボタン作成エラー: {e}")
+    
+    def _apply_edit_button_theme(self):
+        """編集ボタンにテーマスタイルを適用"""
+        try:
+            if not self.edit_button:
+                return
+                
+            theme_data = self._get_theme_data()
+            if not theme_data:
+                # フォールバック用のデフォルトスタイル
+                self.edit_button.setStyleSheet(self._get_fallback_edit_button_style())
+                return
+            
+            button_config = theme_data.get('button', {})
+            style = f"""
+                QPushButton {{
+                    background-color: {button_config.get('background', '#f0f0f0')};
+                    color: {button_config.get('text', '#000000')};
+                    border: 1px solid {button_config.get('border', '#d0d0d0')};
+                    border-radius: 4px;
+                    font-weight: 500;
+                    padding: 2px;
+                }}
+                QPushButton:hover {{
+                    background-color: {button_config.get('hover', '#e0e0e0')};
+                    border-color: {button_config.get('border', '#d0d0d0')};
+                }}
+                QPushButton:pressed {{
+                    background-color: {button_config.get('pressed', '#d0d0d0')};
+                }}
+                QPushButton:disabled {{
+                    background-color: {theme_data.get('background', {}).get('secondary', '#f8f8f8')};
+                    border-color: {theme_data.get('border', {}).get('color', '#e0e0e0')};
+                    color: {theme_data.get('text', {}).get('muted', '#a0a0a0')};
+                }}
+            """
+            self.edit_button.setStyleSheet(style)
+            
+        except Exception as e:
+            logging.error(f"編集ボタンテーマ適用エラー: {e}")
+            if self.edit_button:
+                self.edit_button.setStyleSheet(self._get_fallback_edit_button_style())
+    
+    def _get_fallback_edit_button_style(self) -> str:
+        """フォールバック用の編集ボタンスタイル"""
+        return """
+            QPushButton {
+                background-color: #f0f0f0;
+                border: 1px solid #d0d0d0;
+                border-radius: 4px;
+                font-weight: 500;
+                padding: 2px;
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0;
+                border-color: #b0b0b0;
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0;
+            }
+        """
     
     def setText(self, path):
         """パスを設定（外部から呼び出し可能）"""
@@ -472,6 +556,9 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
     def apply_theme(self, theme_name):
         """テーマを適用"""
         try:
+            # 編集ボタンのテーマスタイルを更新
+            self._apply_edit_button_theme()
+            
             # テーマに応じたスタイル更新
             if theme_name == "dark":
                 self._apply_dark_theme()

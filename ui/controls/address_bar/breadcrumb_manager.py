@@ -8,6 +8,7 @@
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QFont
+from utils.debug_logger import debug, info, warning, error, verbose
 import os
 import logging
 from typing import List, Optional

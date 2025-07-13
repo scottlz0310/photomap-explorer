@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, Qt
 import os
+from utils.debug_logger import debug, info, warning, error, verbose
 
 def load_pixmap(image_path):
     """画像パスからQPixmapを生成して返すユーティリティ関数"""
@@ -33,7 +34,7 @@ def add_thumbnail(thumbnail_list, image_path):
         thumbnail_list.addItem(item)
         return True
     except Exception as e:
-        print(f"サムネイル追加エラー: {e}")
+        error(f"サムネイル追加エラー: {e}")
         return False
 
 def set_thumbnail_size(thumbnail_list, size_label):

@@ -27,6 +27,7 @@ toolbar/
 
 # アドレスバー関連のインポート
 import logging
+from utils.debug_logger import debug, info, warning, error, verbose
 from .address_bar import (
     AddressBarCore,
     BreadcrumbManager,
@@ -254,22 +255,43 @@ def create_controls(on_address_changed_callback=None, on_parent_button_callback=
     Returns:
         tuple: (controls_widget, address_bar, parent_button)
     """
-    # 統合アドレスバーを作成
-    controls_container = IntegratedAddressBar()
-    
-    # コールバック設定
-    if on_address_changed_callback:
-        controls_container.path_changed.connect(on_address_changed_callback)
-    
-    # 親ボタンの参照を取得（NavigationControlsを個別作成）
-    parent_button = None
     try:
-        from .toolbar.navigation_controls import NavigationControls
-        nav_controls = NavigationControls()
-        parent_button = nav_controls.parent_button
-        if on_parent_button_callback and parent_button:
-            parent_button.clicked.connect(on_parent_button_callback)
+        # 全体のコンテナを作成
+        from PyQt5.QtWidgets import QWidget, QHBoxLayout
+        controls_widget = QWidget()
+        layout = QHBoxLayout(controls_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
+        
+        # ナビゲーションコントロールを作成
+        nav_controls = None
+        parent_button = None
+        try:
+            from .toolbar.navigation_controls import NavigationControls
+            nav_controls = NavigationControls()
+            parent_button = nav_controls.parent_button
+            if parent_button and on_parent_button_callback:
+                parent_button.clicked.connect(on_parent_button_callback)
+            layout.addWidget(nav_controls)
+            debug("ナビゲーションコントロール作成成功: {nav_controls}")
+        except Exception as e:
+            warning("ナビゲーションコントロール作成エラー: {e}")
+            logging.warning(f"ナビゲーションコントロール設定エラー: {e}")
+        
+        # 統合アドレスバーを作成
+        controls_container = IntegratedAddressBar()
+        if on_address_changed_callback:
+            controls_container.path_changed.connect(on_address_changed_callback)
+        layout.addWidget(controls_container, 1)  # 拡張
+        
+        debug("コントロール全体作成完了: widget={controls_widget}, container={controls_container}, parent_btn={parent_button}")
+        
+        return controls_widget, controls_container, parent_button
+        
     except Exception as e:
-        logging.warning(f"親ボタン設定エラー: {e}")
-    
-    return controls_container, controls_container, parent_button
+        error("create_controls エラー: {e}")
+        # フォールバック: 統合アドレスバーのみ作成
+        controls_container = IntegratedAddressBar()
+        if on_address_changed_callback:
+            controls_container.path_changed.connect(on_address_changed_callback)
+        return controls_container, controls_container, None

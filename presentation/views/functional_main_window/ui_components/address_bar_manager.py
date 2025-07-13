@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from PyQt5.QtWidgets import QMessageBox
 import logging
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class AddressBarManager:
@@ -34,8 +35,11 @@ class AddressBarManager:
         self.folder_handler = folder_handler
         
         # アドレスバーのシグナル接続
-        if self.address_bar and hasattr(self.address_bar, 'path_changed'):
-            self.address_bar.path_changed.connect(self.on_address_changed)
+        if self.address_bar:
+            if hasattr(self.address_bar, 'path_changed'):
+                self.address_bar.path_changed.connect(self.on_address_changed)
+            if hasattr(self.address_bar, 'navigation_requested'):
+                self.address_bar.navigation_requested.connect(self.on_navigation_requested)
     
     def on_address_changed(self, new_path):
         """GIMP風アドレスバーでパスが変更された時の処理"""
@@ -70,14 +74,32 @@ class AddressBarManager:
             # フォルダハンドラに処理を委譲
             if self.folder_handler:
                 self.folder_handler.load_folder(folder_path)
+            elif hasattr(self.main_window, 'folder_event_handler') and self.main_window.folder_event_handler:
+                # 正しいフォルダイベントハンドラを使用
+                self.main_window.folder_event_handler.load_folder(folder_path)
             else:
-                # フォールバック：メインウィンドウのメソッド呼び出し
-                if hasattr(self.main_window, 'load_folder'):
-                    self.main_window.load_folder(folder_path)
+                self.main_window.show_status_message("❌ フォルダハンドラが見つかりません")
                     
         except Exception as e:
             logging.error(f"アドレスバー経由フォルダ読み込みエラー: {e}")
             self.main_window.show_status_message(f"❌ フォルダ読み込みエラー: {e}")
+    
+    def on_navigation_requested(self, path):
+        """パンくずリストのナビゲーション要求時の処理"""
+        try:
+            # パスを正規化
+            path = os.path.normpath(path) if path else ""
+            
+            if path and os.path.exists(path) and os.path.isdir(path):
+                self._load_folder_via_address_bar(path)
+                verbose(f"パンくずリストナビゲーション: {path}")
+            else:
+                warning(f"無効なパス: {path}")
+                self._handle_invalid_path(path)
+                
+        except Exception as e:
+            error(f"パンくずリストナビゲーションエラー: {e}")
+            self.main_window.show_status_message(f"❌ ナビゲーションエラー: {e}")
     
     def _show_drives_view(self):
         """全ドライブ表示状態"""

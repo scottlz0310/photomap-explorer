@@ -10,6 +10,7 @@ from pathlib import Path
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
+from utils.debug_logger import debug, info, warning, error, verbose
 import logging
 
 
@@ -25,15 +26,26 @@ class ImageEventHandler:
         """
         self.main_window = main_window
         self.selected_image = None
+        self.status_display_manager = None  # StatusDisplayManagerの参照
         
         # コンポーネント参照
         self.preview_panel = None
         self.map_panel = None
         
-    def set_components(self, preview_panel, map_panel):
+    def set_components(self, image_preview=None, map_view=None, status_display=None):
         """UIコンポーネントの参照を設定"""
-        self.preview_panel = preview_panel
-        self.map_panel = map_panel
+        # パラメータ名の互換性を保つ
+        self.preview_panel = image_preview
+        self.map_panel = map_view
+        
+        # StatusDisplayManagerの設定
+        if status_display:
+            self.status_display_manager = status_display
+            
+        debug("画像イベントハンドラーコンポーネント設定:")
+        debug(f"  - preview_panel: {self.preview_panel}")
+        debug(f"  - map_panel: {self.map_panel}")
+        debug(f"  - status_display_manager: {self.status_display_manager}")
     
     def on_image_selected(self, item):
         """画像選択時の処理"""
@@ -44,7 +56,7 @@ class ImageEventHandler:
             if hasattr(item, 'data') and hasattr(item.data, '__call__'):
                 # Qt.UserRoleからパスを取得
                 try:
-                    image_path = item.data(Qt.UserRole)  # type: ignore
+                    image_path = item.data(256)  # Qt.UserRole = 256
                 except:
                     pass
             
@@ -63,6 +75,8 @@ class ImageEventHandler:
             # パスが取得できた場合の処理
             if image_path and os.path.exists(image_path):
                 self.selected_image = image_path
+                # メインウィンドウにも選択された画像を設定
+                self.main_window.selected_image = image_path
                 self.display_image(image_path)
                 self.main_window.show_status_message(f"🖼️ 画像選択: {os.path.basename(image_path)}")
             else:
@@ -94,8 +108,26 @@ class ImageEventHandler:
                 else:
                     self.main_window.show_status_message("❌ 画像読み込み失敗")
             
-            # 詳細情報表示
-            self.update_image_status(image_path)
+            # 選択された画像情報を保存
+            self.selected_image = image_path
+            
+            # メインウィンドウにも設定（最大化ハンドラー用）
+            if hasattr(self.main_window, 'selected_image'):
+                self.main_window.selected_image = image_path
+            else:
+                setattr(self.main_window, 'selected_image', image_path)
+            
+            debug("選択画像設定: {image_path}")
+            
+            # 詳細情報表示（EXIF情報）
+            if self.status_display_manager:
+                self.status_display_manager.update_image_info(image_path)
+            else:
+                self.update_image_status(image_path)
+            
+            # EXIF情報とGPS情報表示
+            if hasattr(self.main_window, 'status_display_manager') and self.main_window.status_display_manager:
+                self.main_window.status_display_manager.update_image_info(image_path)
             
             # GPS情報取得してマップ表示
             self.update_map(image_path)
@@ -315,7 +347,7 @@ class ImageEventHandler:
     def on_folder_item_clicked(self, item):
         """フォルダ項目クリック時の処理"""
         try:
-            item_path = item.data(Qt.UserRole)  # type: ignore
+            item_path = item.data(256)  # Qt.UserRole = 256
             if not item_path:
                 return
             
@@ -328,21 +360,25 @@ class ImageEventHandler:
     def on_folder_item_double_clicked(self, item):
         """フォルダ項目ダブルクリック時の処理"""
         try:
-            item_path = item.data(Qt.UserRole)  # type: ignore
+            item_path = item.data(256)  # Qt.UserRole = 256
             if not item_path or not os.path.exists(item_path):
                 self.main_window.show_status_message("❌ パスが見つかりません")
                 return
             
             if os.path.isdir(item_path):
                 # フォルダの場合：移動（フォルダハンドラに委譲）
-                if hasattr(self.main_window, 'folder_handler'):
-                    self.main_window.folder_handler.load_folder(item_path)
+                if hasattr(self.main_window, 'folder_event_handler') and self.main_window.folder_event_handler:
+                    self.main_window.folder_event_handler.load_folder(item_path)
                     self.main_window.show_status_message(f"📁 フォルダ移動: {item_path}")
+                else:
+                    self.main_window.show_status_message("❌ フォルダハンドラが見つかりません")
             elif os.path.isfile(item_path):
                 # ファイルの場合：画像なら表示
                 file_ext = Path(item_path).suffix.lower()
                 if file_ext in {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}:
                     self.selected_image = item_path
+                    # メインウィンドウにも選択された画像を設定
+                    self.main_window.selected_image = item_path
                     self.display_image(item_path)
                     self.main_window.show_status_message(f"🖼️ 画像表示: {os.path.basename(item_path)}")
                 else:

@@ -8,6 +8,7 @@
 import os
 import logging
 from PyQt5.QtWidgets import QLabel
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class StatusDisplayManager:
@@ -35,6 +36,7 @@ class StatusDisplayManager:
     def update_image_status(self, image_path):
         """画像のステータス情報を更新"""
         try:
+            verbose(f"StatusDisplayManager.update_image_status 開始: {image_path}")
             if not image_path or not os.path.exists(image_path):
                 self.clear_image_status()
                 return False
@@ -43,13 +45,22 @@ class StatusDisplayManager:
             
             # 基本情報とEXIF情報を取得
             basic_info = self._get_basic_info(image_path)
+            verbose(f"基本情報取得: {basic_info}")
+            
             exif_info = self._get_exif_info(image_path)
+            verbose(f"EXIF情報取得: {exif_info}")
+            
             gps_info = self._get_gps_info(image_path)
+            verbose(f"GPS情報取得: {gps_info}")
             
             # ステータス情報を更新
             if self.status_info:
                 info_html = self._format_detailed_info_html(basic_info, exif_info, gps_info)
+                verbose(f"HTML生成完了、ステータス更新中...")
                 self.status_info.setText(info_html)
+                verbose("ステータス情報HTML更新完了")
+            else:
+                warning("status_infoが設定されていません")
             
             # ステータスバーを更新
             if self.status_bar:
@@ -59,7 +70,9 @@ class StatusDisplayManager:
             return True
             
         except Exception as e:
-            logging.error(f"画像ステータス更新エラー: {e}")
+            error(f"画像ステータス更新エラー: {e}")
+            import traceback
+            traceback.print_exc()
             self._show_error_status(image_path, str(e))
             return False
     
@@ -99,10 +112,11 @@ class StatusDisplayManager:
         try:
             # 画像ユーティリティから情報を取得
             try:
-                from logic.image_utils import extract_image_metadata
-                image_info = extract_image_metadata(image_path)
+                from logic.image_utils import extract_image_info
+                image_info = extract_image_info(image_path)
+                verbose(f"extract_image_info取得成功: {type(image_info)}")
             except ImportError:
-                logging.warning("extract_image_metadata が利用できません")
+                warning("extract_image_info が利用できません")
                 return {}
             
             if not image_info:
@@ -403,3 +417,7 @@ class StatusDisplayManager:
                 
         except Exception as e:
             logging.error(f"ステータス再表示エラー: {e}")
+    
+    def update_image_info(self, image_path):
+        """画像のステータス情報を更新（エイリアス）"""
+        return self.update_image_status(image_path)

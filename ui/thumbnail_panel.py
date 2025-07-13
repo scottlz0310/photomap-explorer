@@ -3,6 +3,7 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from ui.thumbnail_list import load_pixmap
 import os
+from utils.debug_logger import debug, info, warning, error, verbose
 
 class ThumbnailPanel(QWidget):
     def __init__(self, on_thumbnail_clicked, on_size_changed):

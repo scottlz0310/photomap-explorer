@@ -6,6 +6,7 @@ __pycache__/
 .vscode/
 venv/
 .venv/
+venv_win/
 
 # IDE や OSのゴミファイル
 .DS_Store

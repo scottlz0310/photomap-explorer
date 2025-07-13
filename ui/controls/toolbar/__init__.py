@@ -16,6 +16,7 @@ from .utility_controls import UtilityControls
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
 import logging
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class IntegratedToolbar(QWidget):

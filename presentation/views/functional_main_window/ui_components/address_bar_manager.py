@@ -125,10 +125,7 @@ class AddressBarManager:
             # アドレスバーを現在のパスに戻す
             if self.address_bar and self.current_path:
                 self.address_bar.setText(self.current_path)
-            else:
-                # 現在のパスがない場合は空にする
-                if self.address_bar:
-                    self.address_bar.setText("")
+            # 現在のパスがない場合は何もしない（空文字列設定を避ける）
                     
         except Exception as e:
             logging.error(f"無効パス処理エラー: {e}")
@@ -145,16 +142,17 @@ class AddressBarManager:
             # 現在のパスを更新
             self.current_path = normalized_path
             
-            # アドレスバーを更新（シグナル発火を避けるため一度クリア）
-            self.address_bar.setText("")
+            # アドレスバーを直接更新（不要な空文字列設定を削除）
             self.address_bar.setText(normalized_path)
             
         except Exception as e:
             logging.error(f"アドレスバー更新エラー: {e}")
     
     def clear_address_bar(self):
-        """アドレスバーをクリア"""
+        """アドレスバーをクリア（必要な場合のみ使用）"""
         try:
+            # 通常は空文字列設定を避ける
+            # この関数は特別な場合（エラー処理等）のみ使用
             if self.address_bar:
                 self.address_bar.setText("")
             self.current_path = None

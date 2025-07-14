@@ -309,8 +309,18 @@ class RightPanelManager:
         if self.maximize_image_btn and toggle_image_maximize:
             # デバッグ用ラッパー関数
             def debug_image_maximize():
-                debug("🖼️ 画像最大化ボタンがクリックされました")
+                import time
+                current_time = time.time()
+                debug(f"🖼️ 画像最大化ボタンがクリックされました (時刻: {current_time:.3f})")
                 try:
+                    # ボタン重複防止チェック
+                    if hasattr(debug_image_maximize, '_last_call_time'):
+                        time_diff = current_time - debug_image_maximize._last_call_time
+                        if time_diff < 0.2:  # 200ms以内の重複クリックをブロック
+                            warning(f"⚠️ ボタンの重複クリックを検出 ({time_diff:.3f}s間隔) - 処理をスキップ")
+                            return
+                    debug_image_maximize._last_call_time = current_time
+                    
                     toggle_image_maximize()
                 except Exception as e:
                     error(f"画像最大化エラー: {e}")
@@ -325,8 +335,18 @@ class RightPanelManager:
         if self.maximize_map_btn and toggle_map_maximize:
             # デバッグ用ラッパー関数
             def debug_map_maximize():
-                debug("🗺️ マップ最大化ボタンがクリックされました")
+                import time
+                current_time = time.time()
+                debug(f"🗺️ マップ最大化ボタンがクリックされました (時刻: {current_time:.3f})")
                 try:
+                    # ボタン重複防止チェック
+                    if hasattr(debug_map_maximize, '_last_call_time'):
+                        time_diff = current_time - debug_map_maximize._last_call_time
+                        if time_diff < 0.2:  # 200ms以内の重複クリックをブロック
+                            warning(f"⚠️ マップボタンの重複クリックを検出 ({time_diff:.3f}s間隔) - 処理をスキップ")
+                            return
+                    debug_map_maximize._last_call_time = current_time
+                    
                     toggle_map_maximize()
                 except Exception as e:
                     error(f"マップ最大化エラー: {e}")

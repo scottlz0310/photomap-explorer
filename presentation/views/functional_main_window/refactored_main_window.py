@@ -158,14 +158,34 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
     def _load_initial_data(self):
         """初期データの読み込み"""
         try:
-            # 初期フォルダ読み込み（assets フォルダを使用）
             import os
-            assets_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "assets")
-            if os.path.exists(assets_path) and self.folder_event_hdlr:
-                self.folder_event_hdlr.load_folder(assets_path)
-                debug(f"初期フォルダ読み込み完了: {assets_path}")
+            import sys
+            
+            # DEBUG用: コマンドライン引数で--debugが指定されている場合はtest_imagesフォルダを使用
+            is_debug_mode = '--debug' in sys.argv
+            
+            if is_debug_mode:
+                # DEBUGモード: test_imagesフォルダを使用
+                test_images_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "test_images")
+                if os.path.exists(test_images_path) and self.folder_event_hdlr:
+                    self.folder_event_hdlr.load_folder(test_images_path)
+                    debug(f"[DEBUG] 初期フォルダ読み込み完了: {test_images_path}")
+                else:
+                    debug("[DEBUG] test_imagesフォルダが見つからないか、フォルダイベントハンドラーが未初期化")
             else:
-                debug("assetsフォルダが見つからないか、フォルダイベントハンドラーが未初期化")
+                # 本番モード: ホームディレクトリを使用
+                if os.name == 'nt':  # Windows
+                    # Windowsの場合: C:\またはユーザーディレクトリ
+                    initial_path = "C:\\" if os.path.exists("C:\\") else os.path.expanduser("~")
+                else:  # Unix系
+                    # Unix系の場合: ホームディレクトリ
+                    initial_path = os.path.expanduser("~")
+                
+                if os.path.exists(initial_path) and self.folder_event_hdlr:
+                    self.folder_event_hdlr.load_folder(initial_path)
+                    debug(f"初期フォルダ読み込み完了: {initial_path}")
+                else:
+                    debug(f"初期フォルダが見つからないか、フォルダイベントハンドラーが未初期化: {initial_path}")
                 
         except Exception as e:
             warning(f"初期データ読み込みエラー: {e}")
@@ -317,9 +337,9 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
                 if file_ext in image_extensions:
                     # 画像ファイルの場合：画像選択 + 最大化
                     self._on_image_selected(item)
-                    # ダブルクリックの場合は画像を最大化表示
+                    # ダブルクリックの場合は画像を最大化表示（重複防止のため長めの遅延）
                     from PyQt5.QtCore import QTimer
-                    QTimer.singleShot(200, self._toggle_image_maximize)
+                    QTimer.singleShot(600, self._toggle_image_maximize)  # 600ms遅延に変更
                 else:
                     # その他のファイルの場合：何もしない
                     debug(f"非画像ファイル（ダブルクリック）: {item_path}")
@@ -352,6 +372,15 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
     def _toggle_image_maximize(self):
         """画像最大化切り替え（暫定）"""
         debug("画像最大化切り替え")
+        # 重複防止のための簡単なチェック
+        import time
+        current_time = time.time()
+        if hasattr(self, '_last_image_maximize_call'):
+            if current_time - self._last_image_maximize_call < 0.3:  # 300ms以内の呼び出しをブロック
+                debug("⚠️ 画像最大化の重複呼び出しを検出、スキップ")
+                return
+        self._last_image_maximize_call = current_time
+        
         if self.maximize_hdlr:
             self.maximize_hdlr.toggle_image_maximize()
         else:
@@ -360,6 +389,15 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
     def _toggle_map_maximize(self):
         """マップ最大化切り替え（暫定）"""
         debug("マップ最大化切り替え")
+        # 重複防止のための簡単なチェック
+        import time
+        current_time = time.time()
+        if hasattr(self, '_last_map_maximize_call'):
+            if current_time - self._last_map_maximize_call < 0.3:  # 300ms以内の呼び出しをブロック
+                debug("⚠️ マップ最大化の重複呼び出しを検出、スキップ")
+                return
+        self._last_map_maximize_call = current_time
+        
         if self.maximize_hdlr:
             self.maximize_hdlr.toggle_map_maximize()
         else:

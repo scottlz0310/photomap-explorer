@@ -10,13 +10,13 @@
       "display_name": "ダークモード",
       "description": "暗い背景の低負荷テーマ",
       "primaryColor": "#222831",
-      "accentColor": "#00adb5",
+      "accentColor": "#718096",
       "backgroundColor": "#1a1a1a",
       "textColor": "#eeeeee",
       "button": {
         "background": "#4a5568",
         "text": "#ffffff",
-        "hover": "#00adb5",
+        "hover": "#5a6470",
         "pressed": "#2d3748",
         "border": "#718096"
       },
@@ -34,7 +34,7 @@
         "secondary": "#e2e8f0",
         "muted": "#a0aec0",
         "heading": "#ffffff",
-        "link": "#00adb5",
+        "link": "#718096",
         "success": "#68d391",
         "warning": "#fbb948",
         "error": "#fc8181"
@@ -43,7 +43,7 @@
         "background": "#2d3748",
         "text": "#ffffff",
         "border": "#4a5568",
-        "focus": "#00adb5",
+        "focus": "#718096",
         "placeholder": "#a0aec0"
       },
       "toolbar": {

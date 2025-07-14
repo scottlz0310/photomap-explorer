@@ -106,11 +106,7 @@ class FolderEventHandler:
     
     def load_initial_folder(self):
         """初期フォルダ読み込み（空の状態で開始）"""
-        # アドレスバーを空に設定
-        if self.address_bar:
-            self.address_bar.setText("")
-        
-        # 初期状態では何も読み込まない
+        # 初期状態では何も読み込まない - アドレスバーは空のまま放置（メインウィンドウがassetsを設定する）
         self.current_folder = None
         self.current_images = []
     
@@ -158,10 +154,8 @@ class FolderEventHandler:
             
             # アドレスバーを更新
             if self.address_bar:
-                # 安全にアドレスバー更新
+                # 直接正しいパスを設定（不要な空文字列設定を削除）
                 try:
-                    self.address_bar.setText("")
-                    QCoreApplication.processEvents()
                     self.address_bar.setText(folder_path)
                 except Exception as addr_e:
                     warning(f"アドレスバー更新エラー: {addr_e}")

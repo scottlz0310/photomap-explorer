@@ -26,6 +26,11 @@ class MaximizeHandler:
         self.main_window = main_window
         self.maximized_state = None  # 'image', 'map', None
         
+        # 重複防止フラグの初期化
+        self._toggle_in_progress = False
+        self._last_image_toggle_time = 0
+        self._last_map_toggle_time = 0
+        
         # コンポーネント参照
         self.main_splitter = None
         self.preview_panel = None
@@ -101,10 +106,28 @@ class MaximizeHandler:
     
     def toggle_image_maximize(self):
         """画像最大化の切り替え"""
-        from utils.debug_logger import debug, error
+        from utils.debug_logger import debug, error, warning
+        import time
         try:
+            # より強力な重複防止機構
+            current_time = time.time()
+            if hasattr(self, '_last_image_toggle_time'):
+                time_diff = current_time - self._last_image_toggle_time
+                if time_diff < 0.5:  # 500ms以内の呼び出しをブロック
+                    warning(f"⚠️ 画像最大化切り替えの重複呼び出しを検出 ({time_diff:.3f}s間隔) - 処理をスキップ")
+                    return
+            
+            # 進行中フラグのダブルチェック
+            if hasattr(self, '_toggle_in_progress') and self._toggle_in_progress:
+                warning("⚠️ 画像最大化切り替えが既に進行中です - 処理をスキップ")
+                return
+            
+            # タイムスタンプと処理フラグを設定
+            self._last_image_toggle_time = current_time
+            self._toggle_in_progress = True
+            
             debug("🖼️ MaximizeHandler: 画像最大化切り替え開始")
-            debug(f"現在の最大化状態: {self.maximized_state}")
+            debug(f"🔍 呼び出し前の状態: maximized_state={self.maximized_state}")
             debug(f"プレビューパネル: {bool(self.preview_panel)}")
             debug(f"最大化コンテナ: {bool(self.maximize_container)}")
             
@@ -136,13 +159,35 @@ class MaximizeHandler:
             import traceback
             traceback.print_exc()
             self.main_window.show_status_message(f"❌ 画像最大化エラー: {e}")
+        finally:
+            # 処理フラグをクリア
+            self._toggle_in_progress = False
+            debug(f"🔍 呼び出し後の状態: maximized_state={self.maximized_state}")
 
     def toggle_map_maximize(self):
         """マップ最大化の切り替え"""
-        from utils.debug_logger import debug, error
+        from utils.debug_logger import debug, error, warning
+        import time
         try:
+            # より強力な重複防止機構
+            current_time = time.time()
+            if hasattr(self, '_last_map_toggle_time'):
+                time_diff = current_time - self._last_map_toggle_time
+                if time_diff < 0.5:  # 500ms以内の呼び出しをブロック
+                    warning(f"⚠️ マップ最大化切り替えの重複呼び出しを検出 ({time_diff:.3f}s間隔) - 処理をスキップ")
+                    return
+            
+            # 進行中フラグのダブルチェック
+            if hasattr(self, '_toggle_in_progress') and self._toggle_in_progress:
+                warning("⚠️ マップ最大化切り替えが既に進行中です - 処理をスキップ")
+                return
+            
+            # タイムスタンプと処理フラグを設定
+            self._last_map_toggle_time = current_time
+            self._toggle_in_progress = True
+            
             debug("🗺️ MaximizeHandler: マップ最大化切り替え開始")
-            debug(f"現在の最大化状態: {self.maximized_state}")
+            debug(f"🔍 呼び出し前の状態: maximized_state={self.maximized_state}")
             debug(f"マップパネル: {bool(self.map_panel)}")
             debug(f"最大化コンテナ: {bool(self.maximize_container)}")
             
@@ -174,10 +219,16 @@ class MaximizeHandler:
             import traceback
             traceback.print_exc()
             self.main_window.show_status_message(f"❌ マップ最大化エラー: {e}")
+        finally:
+            # 処理フラグをクリア
+            self._toggle_in_progress = False
+            debug(f"🔍 呼び出し後の状態: maximized_state={self.maximized_state}")
     
     def maximize_preview(self):
         """プレビューを最大化（簡略化アプローチ）"""
         try:
+            debug("🔧 maximize_preview 開始")
+            
             if not self.preview_panel:
                 self.main_window.show_status_message("❌ プレビューパネルが利用できません")
                 return
@@ -309,7 +360,10 @@ class MaximizeHandler:
             debug(f"🔍 画像最大化表示成功チェック: {display_successful}")
             
             if display_successful:
+                # 状態設定を確実に実行
+                debug(f"🔧 状態設定前: {self.maximized_state}")
                 self.maximized_state = 'image'
+                debug(f"🔧 状態設定後: {self.maximized_state}")
                 self.main_window.show_status_message("🖼️ 画像を最大化表示")
                 debug(f"✅ 画像最大化状態設定完了: {self.maximized_state}")
             else:
@@ -326,6 +380,8 @@ class MaximizeHandler:
     def maximize_map(self):
         """マップを最大化（簡略化アプローチ）"""
         try:
+            debug("🔧 maximize_map 開始")
+            
             if not self.map_panel:
                 self.main_window.show_status_message("❌ マップパネルが利用できません")
                 return
@@ -483,7 +539,10 @@ class MaximizeHandler:
             debug(f"🔍 マップ最大化表示成功チェック: {display_successful}")
             
             if display_successful:
+                # 状態設定を確実に実行
+                debug(f"🔧 状態設定前: {self.maximized_state}")
                 self.maximized_state = 'map'
+                debug(f"🔧 状態設定後: {self.maximized_state}")
                 self.main_window.show_status_message("🗺️ マップを最大化表示")
                 debug(f"✅ マップ最大化状態設定完了: {self.maximized_state}")
             else:
@@ -1088,27 +1147,12 @@ class MaximizeHandler:
     def _apply_current_theme_to_maximized_widgets(self):
         """最大化されたウィジェットに現在のテーマを適用"""
         try:
-            # 複数の方法でテーマ情報を取得
+            # テーマ情報を統一された方法で取得
             theme_colors = None
+            current_theme = None
             
-            # 方法1: テーママネージャーから直接取得
-            if hasattr(self.main_window, 'theme_manager'):
-                theme_manager = self.main_window.theme_manager
-                if hasattr(theme_manager, 'get_current_theme'):
-                    current_theme = theme_manager.get_current_theme()
-                    debug(f"取得したテーマ名: {current_theme}")
-                    
-                    # テーマ定義から色情報を取得
-                    if hasattr(theme_manager, '_theme_engine') and theme_manager._theme_engine:
-                        try:
-                            theme_colors = theme_manager._theme_engine.get_theme_colors(current_theme)
-                            if theme_colors:
-                                debug(f"テーマエンジンから色情報取得成功: {current_theme}")
-                        except Exception as e:
-                            warning("テーマエンジンから色情報取得失敗: {e}")
-            
-            # 方法2: テーマイベントハンドラーから取得
-            if not theme_colors and hasattr(self.main_window, 'theme_event_handler'):
+            # 優先順位1: テーマイベントハンドラーから取得（最も信頼性が高い）
+            if hasattr(self.main_window, 'theme_event_handler'):
                 theme_handler = self.main_window.theme_event_handler
                 if hasattr(theme_handler, 'current_theme'):
                     current_theme = theme_handler.current_theme
@@ -1130,9 +1174,33 @@ class MaximizeHandler:
                             'secondary': '#f0f0f0'
                         }
             
-            # 方法3: デフォルトテーマを使用
+            # 優先順位2: テーママネージャーから取得（フォールバック）
+            if not theme_colors and hasattr(self.main_window, 'theme_manager'):
+                theme_manager = self.main_window.theme_manager
+                if hasattr(theme_manager, 'get_current_theme'):
+                    fallback_theme = theme_manager.get_current_theme()
+                    debug(f"フォールバック: テーママネージャーから取得: {fallback_theme}")
+                    current_theme = fallback_theme  # 統一
+                    
+                    if fallback_theme == "dark":
+                        theme_colors = {
+                            'background': '#2d2d2d',
+                            'foreground': '#ffffff',
+                            'accent': '#007ACC',
+                            'secondary': '#4d4d4d'
+                        }
+                    else:
+                        theme_colors = {
+                            'background': '#ffffff',
+                            'foreground': '#000000',
+                            'accent': '#007ACC',
+                            'secondary': '#f0f0f0'
+                        }
+            
+            # 優先順位3: デフォルトテーマを使用
             if not theme_colors:
                 warning("テーマ情報取得失敗、デフォルトテーマを適用")
+                current_theme = "light"  # デフォルト
                 theme_colors = {
                     'background': '#ffffff',
                     'foreground': '#000000',
@@ -1142,6 +1210,7 @@ class MaximizeHandler:
             
             # テーマカラーを適用
             if theme_colors:
+                debug(f"最終的に使用するテーマ: {current_theme}")
                 self._apply_theme_colors_to_widgets(theme_colors)
                 info(f"最大化ウィジェットにテーマ適用完了: {theme_colors}")
                 

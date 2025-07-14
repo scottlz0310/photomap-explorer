@@ -151,20 +151,10 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
             on_address_changed_callback,
             on_parent_button_callback
         )
-        self.controls_widget.setMaximumHeight(35)
-        # アドレスバーの表示を確認
-        if self.address_bar:
-            debug(f"アドレスバー生成確認: {type(self.address_bar)}, visible: {self.address_bar.isVisible()}")
-            # 明示的に表示設定
-            self.address_bar.setVisible(True)
-            self.address_bar.show()
-            # サイズ設定
-            self.address_bar.setMinimumWidth(200)
-            debug(f"アドレスバーサイズ設定: {self.address_bar.size()}")
         
+        # create_controls内で既に初期化済みのため、追加の設定のみ
         if self.controls_widget:
-            debug(f"コントロールウィジェット: {type(self.controls_widget)}, visible: {self.controls_widget.isVisible()}")
-            self.controls_widget.show()
+            self.controls_widget.setMaximumHeight(55)  # 横並びに対応して高さを調整（少し余裕を持たせる）
         
         toolbar_layout.addWidget(self.controls_widget, 1)
         
@@ -189,6 +179,10 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self.toolbar_widget = QWidget()
         self.toolbar_widget.setLayout(toolbar_layout)
         self.toolbar_widget.setMaximumHeight(40)
+        # ツールバーを確実に表示
+        self.toolbar_widget.setVisible(True)
+        self.toolbar_widget.show()
+        debug(f"ツールバーウィジェット表示設定: visible={self.toolbar_widget.isVisible()}")
         self.main_layout.addWidget(self.toolbar_widget)
     
     def _setup_maximize_container(self):
@@ -363,6 +357,26 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
             verbose("スプリッター実際のサイズ: {self.main_splitter.sizes()}")
         else:
             error("main_splitterが利用できません")
+        
+        # アドレスバーマネージャーにコンポーネントを設定
+        if self.address_bar_manager and hasattr(self, 'address_bar') and self.address_bar:
+            try:
+                # フォルダハンドラーの参照を取得
+                folder_handler = self.folder_event_handler if hasattr(self, 'folder_event_handler') else None
+                
+                # アドレスバーマネージャーにコンポーネントを設定
+                self.address_bar_manager.set_components(self.address_bar, folder_handler)
+                debug(f"✅ アドレスバーマネージャーにコンポーネント設定完了: address_bar={self.address_bar}, folder_handler={folder_handler}")
+                
+                # アドレスバーにプレースホルダーテキストを設定
+                self.address_bar_manager.set_placeholder_text("フォルダパスを入力または選択...")
+                
+            except Exception as e:
+                error(f"アドレスバーマネージャー設定エラー: {e}")
+                import traceback
+                traceback.print_exc()
+        else:
+            warning(f"アドレスバーマネージャー設定スキップ: manager={bool(self.address_bar_manager if hasattr(self, 'address_bar_manager') else False)}, address_bar={bool(getattr(self, 'address_bar', None))}")
     
     def _connect_event_handlers(self):
         """イベントハンドラの接続"""

@@ -3,15 +3,9 @@ Exif情報を解析し、PyQtWebEngineベースの地図にピンを立てて視
 
 ---
 
-## 🆕 主な更新（v2.2.1）
+## 🆕 主な更新（v2.2.0）
 
-### 🔧 UI/UX改善
-- **EXIF情報スクロールバー**: 長い撮影情報でも快適に閲覧可能
-- **最大化ウィンドウテーマ改善**: 最大化モードでも一貫したテーマ適用
-- **ナビゲーション機能検証**: ホームボタン等の動作安定性を確認
-- **デバッグ出力制御**: `--debug`, `--verbose`, `--quiet`オプションによるログレベル制御
-
-### 🏗️ 第2回大規模リファクタリング完了 (v2.2.0)
+### 🏗️ 第2回大規模リファクタリング完了
 - **コードアーキテクチャ改善**: Phase 1, Phase 2 & Phase 3リファクタリング実施
 - **モジュラー設計**: 巨大ファイルを単一責任原則に従って分割
 - **保守性向上**: 開発効率と品質の大幅改善
@@ -107,27 +101,6 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-### 4. アプリケーションを起動
-
-```bash
-# 通常モード
-python main.py
-
-# デバッグモード（全デバッグ情報表示）
-python main.py --debug
-
-# 詳細モード（重要な情報のみ表示）
-python main.py --verbose
-
-# サイレントモード（エラーのみ表示）
-python main.py --quiet
-
-# ヘルプ表示
-python main.py --help
-```
-pip install -r requirements.txt
-```
-
 ### 4. アプリを起動
 
 ```bash
@@ -146,32 +119,6 @@ python main.py
 | PyQtWebEngine| 地図の描画       |
 | folium       | 地図HTML生成     |
 | exifread     | Exifデータ抽出   |
-
----
-
-## 🔤 フォント要件（WSL/Linux環境）
-
-PhotoMap Explorerは最大化ボタンなどでUnicode記号（⛶）を使用しています。WSLやLinux環境で記号が正しく表示されない場合は、以下のフォントパッケージをインストールしてください：
-
-```bash
-# Ubuntu/Debian系
-sudo apt install fonts-noto fonts-noto-color-emoji fonts-dejavu fonts-liberation fonts-ubuntu
-
-# フォントキャッシュの更新
-fc-cache -fv
-
-# 記号の表示テスト
-echo "⛶"
-```
-
-インストール後、アプリケーションを再起動してください。
-
-**対象環境:**
-- WSL (Windows Subsystem for Linux)
-- Ubuntu/Debian Linux
-- その他のLinuxディストリビューション
-
-**注意:** Windows/macOSでは通常、追加のフォントインストールは不要です。
 
 ---
 

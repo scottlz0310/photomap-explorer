@@ -5,7 +5,7 @@
 GIMP風アドレスバーのコア機能を提供します。
 """
 
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QSizePolicy, QLayout
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from presentation.themes.theme_mixin import ThemeAwareMixin
@@ -47,8 +47,8 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
         """UI初期化"""
         try:
             self.main_layout = QHBoxLayout(self)
-            self.main_layout.setContentsMargins(2, 2, 2, 2)
-            self.main_layout.setSpacing(2)
+            self.main_layout.setContentsMargins(4, 4, 4, 4)
+            self.main_layout.setSpacing(4)
             
             # ブレッドクラムコンテナ
             self._create_breadcrumb_widget()
@@ -59,13 +59,13 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             # 編集ボタン
             self._create_edit_button()
             
-            # レイアウト追加
+            # レイアウト追加 - テキスト内容右寄せ対応
             if self.main_layout and self.breadcrumb_widget:
                 self.main_layout.addWidget(self.breadcrumb_widget, 1)  # 拡張可能
             if self.main_layout and self.text_edit:
-                self.main_layout.addWidget(self.text_edit, 1)    # 編集モード時
+                self.main_layout.addWidget(self.text_edit, 1)    # テキストボックス（拡張可能）
             if self.main_layout and self.edit_button:
-                self.main_layout.addWidget(self.edit_button)
+                self.main_layout.addWidget(self.edit_button, 0)  # 固定サイズ
             
             # 初期表示状態設定
             if self.breadcrumb_widget:
@@ -95,7 +95,7 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             
             # ブレッドクラムウィジェットの最小サイズ設定（0幅にならないように）
             if self.breadcrumb_widget:
-                self.breadcrumb_widget.setMinimumWidth(350)  # 幅を拡大してボタンが見切れないように
+                self.breadcrumb_widget.setMinimumWidth(400)  # 幅を400pxに拡大してボタンが見切れないように
                 debug(f"🔧 🔧 🔧 ブレッドクラム最小幅設定: size={self.breadcrumb_widget.size()}")
             
             # 初期テーマを適用
@@ -211,7 +211,7 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             # ウィジェットの基本設定
             if self.breadcrumb_widget:
                 self.breadcrumb_widget.setVisible(True)
-                self.breadcrumb_widget.setMinimumWidth(350)  # 同じ幅に統一
+                self.breadcrumb_widget.setMinimumWidth(400)  # 400pxに統一
             
             # メインレイアウトに適切な位置に追加
             if self.main_layout and self.breadcrumb_widget:
@@ -237,14 +237,58 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             # 重要: 親ウィジェット(self)を明示的に指定
             self.text_edit = QLineEdit(self)
             self.text_edit.setVisible(False)
-            self.text_edit.setMinimumHeight(28)
+            
+            # サイズを大きくして入力しやすく - テキスト内容右寄せ
+            self.text_edit.setMinimumHeight(36)
+            self.text_edit.setMaximumHeight(40)
+            # 最小幅を設定して動的拡張
+            self.text_edit.setMinimumWidth(300)
+            
+            # 可変サイズポリシーを設定 - 拡張可能に
+            from PyQt5.QtWidgets import QSizePolicy
+            self.text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            
+            # 自動フィッティング用のフォントメトリクス設定
+            self._setup_auto_fitting()
+            
+            # 編集モード用のスタイルを適用 - テキスト右寄せ
+            self.text_edit.setStyleSheet("""
+                QLineEdit {
+                    background-color: #ffffff;
+                    border: 2px solid #4299e1;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    font-size: 13px;
+                    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                    selection-background-color: #4299e1;
+                    selection-color: #ffffff;
+                    text-align: right;
+                }
+                QLineEdit:focus {
+                    border-color: #3182ce;
+                    background-color: #f7fafc;
+                    box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.15);
+                }
+                QLineEdit:hover {
+                    border-color: #63b3ed;
+                }
+            """)
+            
+            # プレースホルダーテキストを設定
+            self.text_edit.setPlaceholderText("フォルダパスを入力してください（例: /home/user/Pictures）")
+            
+            # イベント接続
             self.text_edit.returnPressed.connect(self._on_text_entered)
             self.text_edit.editingFinished.connect(self._exit_edit_mode)
             
-            # フォント設定
+            # フォント設定（読みやすいフォントに変更）
             text_font = QFont()
-            text_font.setPointSize(10)
+            text_font.setFamily("Consolas, Monaco, 'Courier New', monospace")
+            text_font.setPointSize(12)  # 11 → 12に拡大してより読みやすく
+            text_font.setWeight(QFont.Normal)
             self.text_edit.setFont(text_font)
+            
+            debug(f"🔧 🔧 🔧 テキスト編集フィールド作成完了: height={self.text_edit.minimumHeight()}")
             
         except Exception as e:
             logging.error(f"テキスト入力フィールド作成エラー: {e}")
@@ -403,13 +447,19 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             
             # デバッグ情報表示
             try:
-                final_count = self.breadcrumb_layout.count()
-                debug(f"🔧 🔧 🔧 最終的なボタン数: {final_count}")
-                for i in range(final_count):
-                    item = self.breadcrumb_layout.itemAt(i)
-                    if item and item.widget():
-                        button = item.widget()
-                        debug(f"🔧 🔧 🔧 ボタン[{i}]: text='{button.text()}', visible={button.isVisible()}")
+                if self.breadcrumb_layout:
+                    final_count = self.breadcrumb_layout.count()
+                    debug(f"🔧 🔧 🔧 最終的なボタン数: {final_count}")
+                    for i in range(final_count):
+                        item = self.breadcrumb_layout.itemAt(i)
+                        if item and item.widget():
+                            button = item.widget()
+                            if button:
+                                debug(f"🔧 🔧 🔧 ボタン[{i}]: text='{button.text()}', visible={button.isVisible()}")
+                            else:
+                                debug(f"🔧 🔧 🔧 ボタン[{i}]: button is None")
+                else:
+                    debug("⚠️ breadcrumb_layout is None")
             except Exception as debug_error:
                 debug(f"⚠️ デバッグ情報表示エラー: {debug_error}")
             
@@ -594,7 +644,7 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             available_width = self.breadcrumb_widget.width() - 30  # マージンを拡大
             debug(f"🔧 🔧 🔧 利用可能幅計算: widget_width={self.breadcrumb_widget.width()}, available_width={available_width}")
             if available_width <= 0:
-                available_width = 300  # より広いデフォルト値
+                available_width = 400  # デフォルト値を400pxに設定
                 debug(f"🔧 🔧 🔧 幅不足のためデフォルト値使用: {available_width}")
             
             # ボタン幅を計算
@@ -926,11 +976,39 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
     def _on_button_clicked(self, path):
         """ボタンクリック時の処理"""
         try:
+            debug(f"🔧 🔧 🔧 ブレッドクラムボタンクリック: path='{path}'")
+            
+            # 危険なパスのチェック
+            dangerous_paths = ['/proc', '/sys', '/dev', '/run', '/media']
+            path_normalized = os.path.normpath(path)
+            
+            for dangerous_path in dangerous_paths:
+                if path_normalized.startswith(dangerous_path):
+                    warning(f"危険なシステムフォルダへのアクセスを拒否（ブレッドクラム）: {path}")
+                    from PyQt5.QtWidgets import QMessageBox
+                    QMessageBox.warning(self, "警告", 
+                                      f"システムフォルダ '{dangerous_path}' へのアクセスは安全性のため制限されています。")
+                    return
+            
+            # WSL環境での特殊対応
+            if path_normalized.startswith('/mnt'):
+                dangerous_mnt_paths = ['/mnt/wslg', '/mnt/wsl']
+                for dangerous_mnt in dangerous_mnt_paths:
+                    if path_normalized.startswith(dangerous_mnt):
+                        warning(f"WSL システムマウントポイントへのアクセスを拒否（ブレッドクラム）: {path}")
+                        from PyQt5.QtWidgets import QMessageBox
+                        QMessageBox.warning(self, "警告", 
+                                          f"WSL システムマウントポイント '{dangerous_mnt}' へのアクセスは安全性のため制限されています。")
+                        return
+            
+            # 安全なパスの場合のみ実行
             self.current_path = path
             self.path_changed.emit(path)
+            debug(f"🔧 🔧 🔧 ブレッドクラムパス変更シグナル送信: '{path}'")
             
         except Exception as e:
             logging.error(f"ボタンクリック処理エラー: {e}")
+            debug(f"🔧 🔧 🔧 ブレッドクラムボタンクリックエラー: {e}")
     
     def _toggle_edit_mode(self):
         """編集モードの切り替え"""
@@ -946,17 +1024,55 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
     def _enter_edit_mode(self):
         """編集モードに入る"""
         try:
+            debug(f"🔧 🔧 🔧 編集モード開始: current_path='{self.current_path}'")
             self.is_edit_mode = True
+            
+            # ブレッドクラムを非表示
             if self.breadcrumb_widget:
                 self.breadcrumb_widget.setVisible(False)
+                
+            # テキスト編集フィールドを表示・設定
             if self.text_edit:
-                self.text_edit.setText(self.current_path)
+                # 現在のパスをテキストボックスに設定
+                self.text_edit.setText(self.current_path or "")
+                
+                # 内容に応じて幅を調整
+                self._adjust_text_width()
+                
                 self.text_edit.setVisible(True)
+                
+                # フォーカスを設定して全選択
                 self.text_edit.setFocus()
                 self.text_edit.selectAll()
+                
+                # カーソルを最後に移動（全選択後にユーザーが入力を始めやすく）
+                from PyQt5.QtCore import QTimer
+                if self.text_edit:
+                    QTimer.singleShot(100, lambda: self.text_edit.setCursorPosition(len(self.text_edit.text())) if self.text_edit else None)
+                
+            # 編集ボタンの表示を変更
             if self.edit_button:
                 self.edit_button.setText("✓")
-                self.edit_button.setToolTip("確定してブレッドクラムモードに戻る")
+                self.edit_button.setToolTip("パスを確定してブレッドクラムモードに戻る (Enter)")
+                # 編集ボタンの色を変更して編集モードであることを明示
+                self.edit_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #48bb78;
+                        color: white;
+                        border: 1px solid #38a169;
+                        border-radius: 4px;
+                        font-weight: bold;
+                        padding: 2px;
+                    }
+                    QPushButton:hover {
+                        background-color: #38a169;
+                    }
+                    QPushButton:pressed {
+                        background-color: #2f855a;
+                    }
+                """)
+                
+            debug(f"🔧 🔧 🔧 編集モード開始完了: text_visible={self.text_edit.isVisible() if self.text_edit else 'None'}")
                 
         except Exception as e:
             logging.error(f"編集モード開始エラー: {e}")
@@ -964,14 +1080,26 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
     def _exit_edit_mode(self):
         """編集モードを終了"""
         try:
+            debug(f"🔧 🔧 🔧 編集モード終了")
             self.is_edit_mode = False
+            
+            # テキスト
             if self.text_edit:
                 self.text_edit.setVisible(False)
+                self.text_edit.clearFocus()
+                
+            # ブレッドクラムを表示
             if self.breadcrumb_widget:
                 self.breadcrumb_widget.setVisible(True)
+                
+            # 編集ボタンの表示を元に戻す
             if self.edit_button:
                 self.edit_button.setText("📝")
                 self.edit_button.setToolTip("テキスト入力モードに切り替え")
+                # テーマに応じたスタイルを再適用
+                self._apply_edit_button_theme()
+                
+            debug(f"🔧 🔧 🔧 編集モード終了完了: breadcrumb_visible={self.breadcrumb_widget.isVisible() if self.breadcrumb_widget else 'None'}")
                 
         except Exception as e:
             logging.error(f"編集モード終了エラー: {e}")
@@ -1036,3 +1164,88 @@ class AddressBarCore(QWidget, ThemeAwareMixin):
             
         except Exception as e:
             logging.error(f"ライトテーマ適用エラー: {e}")
+    
+    def _setup_auto_fitting(self):
+        """テキストボックスの自動サイズ調整機能を設定"""
+        if hasattr(self, 'text_edit') and self.text_edit:
+            # テキスト変更時のイベントを接続
+            self.text_edit.textChanged.connect(self._adjust_text_width)
+            self.text_edit.selectionChanged.connect(self._adjust_text_width)
+            
+            # 初期調整
+            self._adjust_text_width()
+    
+    def _adjust_text_width(self):
+        """テキスト内容に基づいて幅を動的調整 - テキスト内容右寄せ対応"""
+        if not hasattr(self, 'text_edit') or not self.text_edit:
+            return
+            
+        try:
+            # フォントメトリクスを取得
+            font_metrics = self.text_edit.fontMetrics()
+            
+            # 現在のテキスト内容の幅を計算
+            current_text = self.text_edit.text()
+            text_width = font_metrics.horizontalAdvance(current_text) if current_text else 200
+            
+            # パディングとボーダーを考慮した追加幅
+            padding_width = 40  # 左右パディング（16px × 2）+ ボーダー（2px × 2）+ マージン
+            
+            # 最小幅と最大幅を設定
+            min_width = 300  # 最小幅300px
+            max_width = 800  # デフォルト最大幅800px
+            
+            # 親ウィジェットのサイズを考慮した最大幅計算
+            if self.parent():
+                try:
+                    parent_widget = self.parent()
+                    if hasattr(parent_widget, 'width') and callable(getattr(parent_widget, 'width', None)):
+                        parent_width = parent_widget.width()  # type: ignore
+                        if parent_width > 0:
+                            # 親の80%まで使用可能
+                            max_width = int(parent_width * 0.8)
+                except:
+                    max_width = 800
+            
+            # 必要な幅を計算
+            content_based_width = text_width + padding_width
+            
+            # 内容が短い場合でも最小幅を確保し、長い場合は最大幅まで拡張
+            if content_based_width < min_width:
+                required_width = min_width
+            else:
+                required_width = min(content_based_width, max_width)
+            
+            # 滑らかな調整のため、現在の幅との差が15px以上の場合のみ変更
+            current_width = self.text_edit.width()
+            if abs(required_width - current_width) > 15:
+                # 最小・最大幅を設定（固定幅は使わない）
+                self.text_edit.setMinimumWidth(int(required_width))
+                self.text_edit.setMaximumWidth(int(max_width))
+                
+                # レイアウトを更新
+                layout = self.layout()
+                if layout and hasattr(layout, 'invalidate'):
+                    layout.invalidate()
+                if layout and hasattr(layout, 'activate'):
+                    layout.activate()
+                    
+                # 親ウィジェットも更新
+                if self.parent():
+                    parent_widget = self.parent()
+                    if hasattr(parent_widget, 'update') and callable(getattr(parent_widget, 'update', None)):
+                        parent_widget.update()  # type: ignore
+                    
+        except Exception as e:
+            logging.error(f"テキスト幅調整エラー: {e}")
+    
+    def _update_layout_margins(self):
+        """レイアウトマージンを更新"""
+        try:
+            layout = self.layout()
+            if layout and hasattr(layout, 'setContentsMargins'):
+                layout.setContentsMargins(4, 4, 4, 4)
+            if layout and hasattr(layout, 'setSpacing'):
+                layout.setSpacing(4)
+        except Exception as e:
+            logging.error(f"レイアウトマージン更新エラー: {e}")

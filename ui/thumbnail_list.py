@@ -34,7 +34,7 @@ def add_thumbnail(thumbnail_list, image_path):
         thumbnail_list.addItem(item)
         return True
     except Exception as e:
-        error(f"サムネイル追加エラー: {e}")
+        print(f"サムネイル追加エラー: {e}")
         return False
 
 def set_thumbnail_size(thumbnail_list, size_label):

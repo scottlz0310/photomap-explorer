@@ -18,13 +18,9 @@ class SimpleMapView(QWidget):
     GPS情報を表示する軽量版
     """
     
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setup_ui()
-        
-        # 親ウィジェットが設定されている場合は明示的に親を設定
-        if parent is not None:
-            self.setParent(parent)
     
     def setup_ui(self):
         """UI初期化"""
@@ -206,12 +202,11 @@ GPS機能付きカメラや
         """座標をクリップボードにコピー"""
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
             from PyQt5.QtWidgets import QApplication
-from utils.debug_logger import debug, info, warning, error, verbose
             clipboard = QApplication.clipboard()
             coordinates = f"{self.latitude:.6f}, {self.longitude:.6f}"
             clipboard.setText(coordinates)
 
 
-def create_simple_map_view(parent=None):
+def create_simple_map_view():
     """シンプルマップビューを作成"""
-    return SimpleMapView(parent)
+    return SimpleMapView()

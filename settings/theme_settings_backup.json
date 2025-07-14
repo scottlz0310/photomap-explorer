@@ -61,7 +61,8 @@
     }
   },
   "disabled_themes": {
-    "// 以下のテーマを利用したい場合は、available_themes セクションに移動してください": "使用方法: このセクションのテーマをコピーして available_themes に貼り付け",
+    "// 以下のテーマを利用したい場合は、available_themes セクションに移動してください": "コメント",
+    "blue": {
     "blue": {
       "name": "blue",
       "display_name": "ブルーモード",
@@ -222,6 +223,24 @@
       "panel": {
         "background": "#3d3d3d",
         "border": "#5d5d5d"
+      }
+    },
+    "high_contrast": {
+      "name": "high_contrast",
+      "display_name": "ハイコントラスト",
+      "description": "アクセシビリティ対応の高コントラストテーマ",
+      "primaryColor": "#ffff00",
+      "accentColor": "#00ffff",
+      "backgroundColor": "#000000",
+      "textColor": "#ffffff",
+      "button": {
+        "background": "#ffff00",
+        "text": "#000000",
+        "hover": "#eeee00"
+      },
+      "panel": {
+        "background": "#111111",
+        "border": "#ffffff"
       }
     },
     "sepia": {

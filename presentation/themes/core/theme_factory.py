@@ -11,9 +11,6 @@ from enum import Enum
 
 from ..definitions.light_theme import create_light_theme, create_light_theme_variant, get_light_color_variations
 from ..definitions.dark_theme import create_dark_theme, create_dark_theme_variant, get_dark_color_variations
-from ..definitions.blue_theme import create_blue_theme
-from ..definitions.green_theme import create_green_theme
-from ..definitions.purple_theme import create_purple_theme
 from .theme_engine import ThemeMode
 
 
@@ -36,9 +33,6 @@ class ThemeFactory:
         self._theme_creators.update({
             "light": create_light_theme,
             "dark": create_dark_theme,
-            "blue": create_blue_theme,
-            "green": create_green_theme,
-            "purple": create_purple_theme,
             # バリエーション
             "light_blue": lambda: create_light_theme_variant("blue"),
             "light_green": lambda: create_light_theme_variant("green"),

@@ -1,39 +1,32 @@
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
-from utils.debug_logger import debug, info, warning, error, verbose
 import os
 
 
 class MapPanel(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.view = None
         self.setup_view()
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.view)
-        
-        # 親ウィジェットが設定されている場合は明示的に親を設定
-        if parent is not None:
-            self.setParent(parent)
     
     def setup_view(self):
         """マップビューのセットアップ（フォールバック対応）"""
         try:
             # 最初にQtWebEngineベースを試行
             from ui.map_view import create_map_view
-            self.view = create_map_view(parent=self)
-            if self.view:
-                self.view.setMinimumHeight(200)
+            self.view = create_map_view()
+            self.view.setMinimumHeight(200)
             self.use_webengine = True
         except Exception as e:
             # QtWebEngineが利用できない場合はシンプルビューを使用
-            warning(f"QtWebEngine利用不可、シンプルビューを使用: {e}")
+            print(f"QtWebEngine利用不可、シンプルビューを使用: {e}")
             from ui.simple_map_view import create_simple_map_view
-            self.view = create_simple_map_view(parent=self)
-            if self.view:
-                self.view.setMinimumHeight(200)
+            self.view = create_simple_map_view()
+            self.view.setMinimumHeight(200)
             self.use_webengine = False
 
     def load_map(self, map_file):
@@ -114,6 +107,6 @@ class MapPanel(QWidget):
             self.view.show_no_gps()
 
 
-def create_map_panel(parent=None):
+def create_map_panel():
     """マップパネルを作成して返す関数"""
-    return MapPanel(parent)
+    return MapPanel()

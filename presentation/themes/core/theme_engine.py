@@ -45,8 +45,7 @@ class ThemeEngine(QObject):
         self.theme_registry: Dict[str, Dict[str, Any]] = {}
         self.custom_themes: Dict[str, Dict[str, Any]] = {}
         
-        # キャッシュ設定
-        self.enable_caching = True
+        # キャッシュ
         self.style_cache: Dict[str, str] = {}
         self.color_cache: Dict[str, str] = {}
         
@@ -146,41 +145,29 @@ class ThemeEngine(QObject):
         """利用可能なカスタムテーマ一覧を取得"""
         return list(self.custom_themes.keys())
     
-    def set_theme(self, theme_mode) -> bool:
+    def set_theme(self, theme_mode: ThemeMode) -> bool:
         """
         テーマを設定
         
         Args:
-            theme_mode: 設定するテーマモード（ThemeModeまたは文字列）
+            theme_mode: 設定するテーマモード
             
         Returns:
             bool: 設定成功可否
         """
         try:
-            # 文字列の場合はそのまま使用、ThemeModeの場合は.valueを使用
-            if isinstance(theme_mode, str):
-                theme_key = theme_mode
-                theme_emit_value = theme_mode
-            elif hasattr(theme_mode, 'value'):
-                theme_key = theme_mode.value
-                theme_emit_value = theme_mode.value
-            else:
-                theme_key = str(theme_mode)
-                theme_emit_value = str(theme_mode)
-            
             # 同じテーマの場合はスキップ
-            current_key = getattr(self.current_theme, 'value', str(self.current_theme))
-            if theme_key == current_key and not self.is_loading:
+            if theme_mode == self.current_theme and not self.is_loading:
                 return True
             
             # テーマ存在確認
-            if theme_key not in self.theme_registry:
-                logging.error(f"テーマが登録されていません: {theme_key}")
+            if theme_mode not in self.theme_registry:
+                logging.error(f"テーマが登録されていません: {theme_mode}")
                 return False
             
             # ローディング開始
             self.is_loading = True
-            self.theme_loading.emit(theme_key)
+            self.theme_loading.emit(theme_mode.value)
             
             # 前のテーマを保存
             self.previous_theme = self.current_theme
@@ -189,27 +176,24 @@ class ThemeEngine(QObject):
             self.current_theme = theme_mode
             
             # キャッシュクリア
-            if hasattr(self, 'enable_caching') and self.enable_caching:
+            if self.enable_caching:
                 self._clear_cache()
             
             # テーマ変更通知
-            self.theme_changed.emit(theme_emit_value)
+            self.theme_changed.emit(theme_mode.value)
             
             # ローディング完了
             self.is_loading = False
-            self.theme_loaded.emit(theme_emit_value)
+            self.theme_loaded.emit(theme_mode.value)
             
-            logging.info(f"テーマ変更完了: {getattr(self.previous_theme, 'value', str(self.previous_theme))} → {theme_emit_value}")
+            logging.info(f"テーマ変更完了: {self.previous_theme.value} → {theme_mode.value}")
             return True
             
         except Exception as e:
             self.is_loading = False
             error_msg = f"テーマ設定エラー: {e}"
             logging.error(error_msg)
-            try:
-                self.theme_error.emit(theme_emit_value, str(e))
-            except:
-                pass
+            self.theme_error.emit(theme_mode.value, str(e))
             return False
     
     def set_custom_theme(self, theme_name: str) -> bool:
@@ -271,61 +255,24 @@ class ThemeEngine(QObject):
             logging.error(f"テーマ復元エラー: {e}")
             return False
     
-    def get_theme_data(self, theme_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_theme_data(self, theme_mode: Optional[ThemeMode] = None) -> Optional[Dict[str, Any]]:
         """
         テーマデータを取得
         
         Args:
-            theme_name: テーマ名（省略時は現在のテーマ）
+            theme_mode: 対象テーマモード（Noneの場合は現在のテーマ）
             
         Returns:
             Optional[Dict[str, Any]]: テーマデータ
         """
         try:
-            if not theme_name:
-                if isinstance(self.current_theme, str):
-                    theme_name = self.current_theme
-                elif hasattr(self.current_theme, 'value'):
-                    theme_name = self.current_theme.value
-                else:
-                    theme_name = str(self.current_theme)
+            target_theme = theme_mode or self.current_theme
             
-            # 登録されたテーマから検索
-            if theme_name in self.theme_registry:
-                return self.theme_registry[theme_name]
-            
-            # カスタムテーマから検索
-            if theme_name in self.custom_themes:
-                return self.custom_themes[theme_name]
-            
-            return None
+            return self.theme_registry.get(target_theme)
             
         except Exception as e:
             logging.error(f"テーマデータ取得エラー: {e}")
             return None
-    
-    def get_color(self, color_key: str, theme_name: Optional[str] = None) -> str:
-        """
-        テーマから色を取得
-        
-        Args:
-            color_key: 色のキー
-            theme_name: テーマ名（省略時は現在のテーマ）
-            
-        Returns:
-            str: 色の値（見つからない場合は空文字列）
-        """
-        try:
-            theme_data = self.get_theme_data(theme_name)
-            if theme_data and 'colors' in theme_data:
-                colors = theme_data['colors']
-                return colors.get(color_key, "")
-            
-            return ""
-            
-        except Exception as e:
-            logging.error(f"色取得エラー: {e}")
-            return ""
     
     def get_style(self, component: str, theme_mode: Optional[ThemeMode] = None) -> str:
         """

@@ -19,7 +19,6 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
                             QHeaderView, QStyle, QToolButton, QComboBox)
 from PyQt5.QtCore import Qt, QDir, QModelIndex, QFileInfo, QSize, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from utils.debug_logger import debug, info, warning, error, verbose
 
 from logic.image_utils import get_supported_extensions, create_image_preview
 
@@ -233,7 +232,7 @@ class CustomFolderDialog(QDialog):
                 self._add_item_to_list(item_name, item_path)
                 
         except Exception as e:
-            error(f"ファイルリスト更新エラー: {e}")
+            print(f"ファイルリスト更新エラー: {e}")
     
     def _add_item_to_list(self, name: str, path: str):
         """リストにアイテムを追加"""
@@ -277,7 +276,7 @@ class CustomFolderDialog(QDialog):
             if pixmap and not pixmap.isNull():
                 item.setIcon(QIcon(pixmap))
         except Exception as e:
-            warning(f"サムネイル読み込みエラー ({path}): {e}")
+            print(f"サムネイル読み込みエラー ({path}): {e}")
     
     def _go_up(self):
         """上の階層に移動"""
@@ -331,8 +330,8 @@ from utils.debug_logger import debug, info, warning, error, verbose
     
     folder = show_custom_folder_dialog()
     if folder:
-        debug(f"選択されたフォルダ: {folder}")
+        print(f"選択されたフォルダ: {folder}")
     else:
-        debug("キャンセルされました")
+        print("キャンセルされました")
     
     sys.exit()

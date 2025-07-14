@@ -12,7 +12,6 @@ from presentation.themes.theme_mixin import ThemeAwareMixin
 import os
 import logging
 from typing import Optional
-from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class NavigationControls(QWidget, ThemeAwareMixin):
@@ -32,9 +31,6 @@ class NavigationControls(QWidget, ThemeAwareMixin):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        
-        # ThemeAwareMixinの初期化を明示的に呼び出し
-        ThemeAwareMixin.__init__(self)
         
         # 状態管理
         self.current_path = ""
@@ -78,23 +74,8 @@ class NavigationControls(QWidget, ThemeAwareMixin):
             # 右端にスペーサー
             layout.addStretch()
             
-            # 初期テーマを適用
-            self._update_all_button_styles()
-            
-            # テーマエンジンが遅延初期化される場合に備えて遅延適用も設定
-            from PyQt5.QtCore import QTimer
-            QTimer.singleShot(500, self._delayed_theme_update)
-            
         except Exception as e:
             logging.error(f"ナビゲーションコントロールUI初期化エラー: {e}")
-    
-    def _delayed_theme_update(self):
-        """遅延テーマ更新（テーマエンジンの初期化完了後）"""
-        try:
-            debug("遅延テーマ更新を実行")
-            self._update_all_button_styles()
-        except Exception as e:
-            logging.error(f"遅延テーマ更新エラー: {e}")
     
     def _create_history_buttons(self, layout: QHBoxLayout):
         """履歴ボタン（戻る/進む）を作成"""
@@ -198,7 +179,6 @@ class NavigationControls(QWidget, ThemeAwareMixin):
             self.refresh_button = QPushButton("🔄")
             self.refresh_button.setFixedSize(35, 30)
             self.refresh_button.setToolTip("現在のフォルダを更新")
-            self.refresh_button.setEnabled(True)  # 常に有効
             self.refresh_button.clicked.connect(self._on_refresh_clicked)
             
             # フォント設定
@@ -215,48 +195,7 @@ class NavigationControls(QWidget, ThemeAwareMixin):
             logging.error(f"更新ボタン作成エラー: {e}")
     
     def _get_history_button_style(self) -> str:
-        """履歴ボタンのスタイル（テーマ設定から取得）"""
-        try:
-            theme_data = self._get_theme_data()
-            debug(f"履歴ボタン: テーマデータ取得 = {theme_data is not None}")
-            
-            if not theme_data:
-                # フォールバック用のデフォルトスタイル
-                debug("履歴ボタン: フォールバックスタイル使用")
-                return self._get_fallback_history_style()
-            
-            button_config = theme_data.get('button', {})
-            debug(f"履歴ボタン: ボタン設定 = {button_config}")
-            # 履歴ボタンも通常のボタン設定を使用
-            
-            return f"""
-                QPushButton {{
-                    background-color: {button_config.get('background', '#f0f0f0')};
-                    color: {button_config.get('text', '#333333')};
-                    border: 1px solid {button_config.get('border', '#d0d0d0')};
-                    border-radius: 4px;
-                    font-weight: bold;
-                    padding: 2px 6px;
-                }}
-                QPushButton:hover:enabled {{
-                    background-color: {button_config.get('hover', '#e8e8e8')};
-                    border-color: {button_config.get('border', '#d0d0d0')};
-                }}
-                QPushButton:pressed:enabled {{
-                    background-color: {button_config.get('pressed', '#d8d8d8')};
-                }}
-                QPushButton:disabled {{
-                    background-color: {theme_data.get('panel', {}).get('background', '#f0f0f0')};
-                    border-color: {theme_data.get('border', {}).get('color', button_config.get('border', '#e0e0e0'))};
-                    color: {theme_data.get('text', {}).get('muted', '#a0a0a0')};
-                }}
-            """
-        except Exception as e:
-            logging.error(f"履歴ボタンスタイル取得エラー: {e}")
-            return self._get_fallback_history_style()
-    
-    def _get_fallback_history_style(self) -> str:
-        """フォールバック用の履歴ボタンスタイル"""
+        """履歴ボタンのスタイル"""
         return """
             QPushButton {
                 background-color: #f8f8f8;
@@ -280,47 +219,7 @@ class NavigationControls(QWidget, ThemeAwareMixin):
         """
     
     def _get_navigation_button_style(self) -> str:
-        """ナビゲーションボタンのスタイル（テーマ設定から取得）"""
-        try:
-            theme_data = self._get_theme_data()
-            debug(f"ナビゲーションボタン: テーマデータ取得 = {theme_data is not None}")
-            
-            if not theme_data:
-                # フォールバック用のデフォルトスタイル
-                debug("ナビゲーションボタン: フォールバックスタイル使用")
-                return self._get_fallback_navigation_style()
-            
-            button_config = theme_data.get('button', {})
-            debug(f"ナビゲーションボタン: ボタン設定 = {button_config}")
-            
-            return f"""
-                QPushButton {{
-                    background-color: {button_config.get('background', '#f0f0f0')};
-                    color: {button_config.get('text', '#000000')};
-                    border: 1px solid {button_config.get('border', '#d0d0d0')};
-                    border-radius: 4px;
-                    font-weight: 500;
-                    padding: 4px 8px;
-                }}
-                QPushButton:hover {{
-                    background-color: {button_config.get('hover', '#e0e0e0')};
-                    border-color: {button_config.get('border', '#d0d0d0')};
-                }}
-                QPushButton:pressed {{
-                    background-color: {button_config.get('pressed', '#d0d0d0')};
-                }}
-                QPushButton:disabled {{
-                    background-color: {theme_data.get('background', {}).get('secondary', '#f8f8f8')};
-                    border-color: {theme_data.get('border', {}).get('color', '#e0e0e0')};
-                    color: {theme_data.get('text', {}).get('muted', '#a0a0a0')};
-                }}
-            """
-        except Exception as e:
-            logging.error(f"ナビゲーションボタンスタイル取得エラー: {e}")
-            return self._get_fallback_navigation_style()
-    
-    def _get_fallback_navigation_style(self) -> str:
-        """フォールバック用のナビゲーションスタイル"""
+        """ナビゲーションボタンのスタイル"""
         return """
             QPushButton {
                 background-color: #f0f0f0;
@@ -432,10 +331,6 @@ class NavigationControls(QWidget, ThemeAwareMixin):
     def apply_theme(self, theme_name: str):
         """テーマを適用"""
         try:
-            # 全ボタンのスタイルを更新（テーマ設定から取得）
-            self._update_all_button_styles()
-            
-            # テーマ名による特別な処理があれば実行
             if theme_name == "dark":
                 self._apply_dark_theme()
             else:
@@ -444,69 +339,71 @@ class NavigationControls(QWidget, ThemeAwareMixin):
         except Exception as e:
             logging.error(f"テーマ適用エラー: {e}")
     
-    def _update_all_button_styles(self):
-        """全ボタンのスタイルを更新"""
+    def _apply_dark_theme(self):
+        """ダークテーマを適用"""
         try:
-            # ナビゲーションボタン
-            for button in [self.parent_button, self.home_button, self.refresh_button]:
-                if button:
-                    button.setStyleSheet(self._get_navigation_button_style())
+            dark_style = """
+                QPushButton {
+                    background-color: #3c3c3c;
+                    border: 1px solid #555;
+                    border-radius: 4px;
+                    color: #fff;
+                }
+                QPushButton:hover:enabled {
+                    background-color: #505050;
+                    border-color: #777;
+                }
+                QPushButton:pressed:enabled {
+                    background-color: #2a2a2a;
+                }
+                QPushButton:disabled {
+                    background-color: #2a2a2a;
+                    border-color: #444;
+                    color: #666;
+                }
+            """
             
-            # 履歴ボタン
-            for button in [self.back_button, self.forward_button]:
+            # 全ボタンに適用
+            for button in [self.parent_button, self.home_button, self.refresh_button, 
+                          self.back_button, self.forward_button]:
                 if button:
-                    button.setStyleSheet(self._get_history_button_style())
+                    button.setStyleSheet(dark_style)
             
             # セパレーター
-            self._apply_separator_theme()
-            
-        except Exception as e:
-            logging.error(f"全ボタンスタイル更新エラー: {e}")
-    
-    def _apply_dark_theme(self):
-        """ダークテーマを適用（追加処理があれば実装）"""
-        try:
-            # 既に _update_all_button_styles() で処理済み
-            # 必要に応じてダークテーマ固有の処理を追加
-            pass
+            if self.separator_label:
+                self.separator_label.setStyleSheet("""
+                    QLabel {
+                        color: #666;
+                        font-weight: bold;
+                    }
+                """)
             
         except Exception as e:
             logging.error(f"ダークテーマ適用エラー: {e}")
     
     def _apply_light_theme(self):
-        """ライトテーマを適用（追加処理があれば実装）"""
+        """ライトテーマを適用"""
         try:
-            # 既に _update_all_button_styles() で処理済み
-            # 必要に応じてライトテーマ固有の処理を追加
-            pass
+            # 元のスタイルに戻す
+            if self.parent_button:
+                self.parent_button.setStyleSheet(self._get_navigation_button_style())
+            if self.home_button:
+                self.home_button.setStyleSheet(self._get_navigation_button_style())
+            if self.refresh_button:
+                self.refresh_button.setStyleSheet(self._get_navigation_button_style())
             
-        except Exception as e:
-            logging.error(f"ライトテーマ適用エラー: {e}")
-    
-    def _apply_separator_theme(self):
-        """セパレーターのテーマを適用"""
-        try:
-            if not self.separator_label:
-                return
-                
-            theme_data = self._get_theme_data()
-            if not theme_data:
-                # フォールバック
+            for button in [self.back_button, self.forward_button]:
+                if button:
+                    button.setStyleSheet(self._get_history_button_style())
+            
+            # セパレーター
+            if self.separator_label:
                 self.separator_label.setStyleSheet("""
                     QLabel {
                         color: #c0c0c0;
                         font-weight: bold;
                     }
                 """)
-                return
-            
-            text_color = theme_data.get('text', {}).get('muted', '#c0c0c0')
-            self.separator_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {text_color};
-                    font-weight: bold;
-                }}
-            """)
             
         except Exception as e:
-            logging.error(f"セパレーターテーマ適用エラー: {e}")
+            logging.error(f"ライトテーマ適用エラー: {e}")

@@ -138,14 +138,14 @@ def test_main_application():
     
     try:
         from PyQt5.QtWidgets import QApplication
-        from presentation.views.functional_main_window.refactored_main_window import RefactoredFunctionalMainWindow
+        from presentation.views.functional_new_main_view import FunctionalNewMainWindow
         
         # QApplicationが必要
         if not QApplication.instance():
             app = QApplication([])
         
         # メインウィンドウ作成テスト（実際の表示はしない）
-        window = RefactoredFunctionalMainWindow()
+        window = FunctionalNewMainWindow()
         assert window is not None, "メインウィンドウ作成失敗"
         print("  ✅ メインウィンドウ作成成功")
         

@@ -41,9 +41,17 @@ class MaximizeHandler:
         
     def set_components(self, main_splitter, preview_panel, map_panel):
         """コンポーネントの参照を設定"""
+        from utils.debug_logger import debug
+        debug(f"🔧 MaximizeHandler: コンポーネント設定")
+        debug(f"  main_splitter: {main_splitter}")
+        debug(f"  preview_panel: {preview_panel}")
+        debug(f"  map_panel: {map_panel}")
+        
         self.main_splitter = main_splitter
         self.preview_panel = preview_panel
         self.map_panel = map_panel
+        
+        debug("✅ MaximizeHandler: コンポーネント参照設定完了")
     
     def create_maximize_container(self):
         """最大化表示用のコンテナ作成"""
@@ -93,28 +101,78 @@ class MaximizeHandler:
     
     def toggle_image_maximize(self):
         """画像最大化の切り替え"""
+        from utils.debug_logger import debug, error
         try:
+            debug("🖼️ MaximizeHandler: 画像最大化切り替え開始")
+            debug(f"現在の最大化状態: {self.maximized_state}")
+            debug(f"プレビューパネル: {bool(self.preview_panel)}")
+            debug(f"最大化コンテナ: {bool(self.maximize_container)}")
+            
+            # 実際の表示状態をチェック
+            actually_maximized = (self.maximize_container and 
+                                 self.maximize_container.isVisible() and 
+                                 self.maximize_container.size().width() > 100)
+            debug(f"🔍 実際の最大化表示状態: {actually_maximized}")
+            
+            # 状態の不整合をチェック
+            if self.maximized_state == 'image' and not actually_maximized:
+                warning("⚠️ 状態不整合検出: 最大化状態だが実際は表示されていない - 状態をリセット")
+                self.maximized_state = None
+            elif self.maximized_state != 'image' and actually_maximized:
+                warning("⚠️ 状態不整合検出: 通常状態だが実際は最大化表示されている - 状態を修正")
+                self.maximized_state = 'image'
+            
             logging.info("画像最大化切り替え開始")
             if self.maximized_state == 'image':
+                debug("🔄 画像最大化状態から通常表示に復元")
                 self.restore_normal_view()
             else:
+                debug("🔍 通常表示から画像最大化")
                 self.maximize_preview()
                 
         except Exception as e:
+            error(f"画像最大化切り替えエラー: {e}")
             logging.error(f"画像最大化切り替えエラー: {e}")
+            import traceback
+            traceback.print_exc()
             self.main_window.show_status_message(f"❌ 画像最大化エラー: {e}")
-    
+
     def toggle_map_maximize(self):
         """マップ最大化の切り替え"""
+        from utils.debug_logger import debug, error
         try:
+            debug("🗺️ MaximizeHandler: マップ最大化切り替え開始")
+            debug(f"現在の最大化状態: {self.maximized_state}")
+            debug(f"マップパネル: {bool(self.map_panel)}")
+            debug(f"最大化コンテナ: {bool(self.maximize_container)}")
+            
+            # 実際の表示状態をチェック
+            actually_maximized = (self.maximize_container and 
+                                 self.maximize_container.isVisible() and 
+                                 self.maximize_container.size().width() > 100)
+            debug(f"🔍 実際の最大化表示状態: {actually_maximized}")
+            
+            # 状態の不整合をチェック
+            if self.maximized_state == 'map' and not actually_maximized:
+                warning("⚠️ 状態不整合検出: 最大化状態だが実際は表示されていない - 状態をリセット")
+                self.maximized_state = None
+            elif self.maximized_state != 'map' and actually_maximized:
+                warning("⚠️ 状態不整合検出: 通常状態だが実際は最大化表示されている - 状態を修正")
+                self.maximized_state = 'map'
+            
             logging.info("マップ最大化切り替え開始")
             if self.maximized_state == 'map':
+                debug("🔄 マップ最大化状態から通常表示に復元")
                 self.restore_normal_view()
             else:
+                debug("🔍 通常表示からマップ最大化")
                 self.maximize_map()
                 
         except Exception as e:
+            error(f"マップ最大化切り替えエラー: {e}")
             logging.error(f"マップ最大化切り替えエラー: {e}")
+            import traceback
+            traceback.print_exc()
             self.main_window.show_status_message(f"❌ マップ最大化エラー: {e}")
     
     def maximize_preview(self):
@@ -146,7 +204,7 @@ class MaximizeHandler:
                     QCoreApplication.processEvents()
                     debug("既存の画像最大化コンテナを再利用準備")
                 except Exception as e:
-                    warning("既存コンテナ再利用準備エラー（無視）: {e}")
+                    warning(f"既存コンテナ再利用準備エラー（無視）: {e}")
             else:
                 debug("新しい画像最大化コンテナを作成")
                 
@@ -213,15 +271,15 @@ class MaximizeHandler:
              # 複数の方法で現在の画像を取得
             if hasattr(self.main_window, 'selected_image') and self.main_window.selected_image:
                 current_image = self.main_window.selected_image
-                debug("メインウィンドウから画像取得: {current_image}")
+                debug(f"メインウィンドウから画像取得: {current_image}")
             elif hasattr(self.main_window, 'thumbnail_list') and self.main_window.thumbnail_list and self.main_window.thumbnail_list.currentRow() >= 0:
                 item = self.main_window.thumbnail_list.item(self.main_window.thumbnail_list.currentRow())
                 if item:
                     current_image = item.data(256)  # Qt.UserRole = 256
-                    debug("サムネイルリストから画像取得: {current_image}")
+                    debug(f"サムネイルリストから画像取得: {current_image}")
             
             if current_image:
-                debug("画像ファイル確認: 存在={os.path.exists(current_image)}")
+                debug(f"画像ファイル確認: 存在={os.path.exists(current_image)}")
                 
                 # ImagePreviewViewに直接画像を設定
                 self.maximized_preview.set_image(current_image)
@@ -229,7 +287,7 @@ class MaximizeHandler:
                 # レイアウト確定後に適切にフィットするように遅延実行
                 from PyQt5.QtCore import QTimer
                 QTimer.singleShot(100, lambda: self._ensure_fit_after_layout(current_image))
-                info("ズーム機能付き画像表示完了（遅延フィット予約）: {current_image}")
+                info(f"ズーム機能付き画像表示完了（遅延フィット予約）: {current_image}")
             else:
                 error("現在の画像が見つかりません")
             
@@ -244,8 +302,20 @@ class MaximizeHandler:
             debug(f"  - 親: {self.maximize_container.parent()}")
             debug(f"  - 表示状態: {self.maximize_container.isVisible()}")
             
-            self.maximized_state = 'image'
-            self.main_window.show_status_message("🖼️ 画像を最大化表示")
+            # 実際に表示されているかチェック
+            display_successful = (self.maximize_container.isVisible() and 
+                                self.maximize_container.size().width() > 100 and 
+                                self.maximize_container.size().height() > 100)
+            debug(f"🔍 画像最大化表示成功チェック: {display_successful}")
+            
+            if display_successful:
+                self.maximized_state = 'image'
+                self.main_window.show_status_message("🖼️ 画像を最大化表示")
+                debug(f"✅ 画像最大化状態設定完了: {self.maximized_state}")
+            else:
+                warning("❌ 画像最大化表示に失敗、状態をリセット")
+                self.maximized_state = None
+                self.main_window.show_status_message("❌ 画像最大化に失敗しました")
             
         except Exception as e:
             logging.error(f"プレビュー最大化エラー: {e}")
@@ -282,7 +352,7 @@ class MaximizeHandler:
                     QCoreApplication.processEvents()
                     debug("既存の地図最大化コンテナを再利用準備")
                 except Exception as e:
-                    warning("既存コンテナ再利用準備エラー（無視）: {e}")
+                    warning(f"既存コンテナ再利用準備エラー（無視）: {e}")
             else:
                 debug("新しい地図最大化コンテナを作成")
                 
@@ -332,7 +402,7 @@ class MaximizeHandler:
             # 戻るボタンを最前面に表示
             self.restore_button.show()
             self.restore_button.raise_()
-            debug("地図最大化の戻るボタン作成: size={self.restore_button.size()}, visible={self.restore_button.isVisible()}")
+            debug("地図最大化の戻るボタン作成: size={}, visible={}".format(self.restore_button.size(), self.restore_button.isVisible()))
             
             # マップパネルのクローンを作成してコンテンツを表示
             from ui.map_panel import MapPanel
@@ -357,15 +427,15 @@ class MaximizeHandler:
             # 複数の方法で現在の画像を取得
             if hasattr(self.main_window, 'selected_image') and self.main_window.selected_image:
                 current_image = self.main_window.selected_image
-                debug("メインウィンドウから画像取得: {current_image}")
+                debug(f"メインウィンドウから画像取得: {current_image}")
             elif hasattr(self.main_window, 'thumbnail_list') and self.main_window.thumbnail_list and self.main_window.thumbnail_list.currentRow() >= 0:
                 item = self.main_window.thumbnail_list.item(self.main_window.thumbnail_list.currentRow())
                 if item:
                     current_image = item.data(256)  # Qt.UserRole = 256
-                    debug("サムネイルリストから画像取得: {current_image}")
+                    debug(f"サムネイルリストから画像取得: {current_image}")
             
             if current_image:
-                debug("マップ用画像ファイル確認: 存在={os.path.exists(current_image)}")
+                debug(f"マップ用画像ファイル確認: 存在={os.path.exists(current_image)}")
                 
                 # GPS情報を取得してマップに表示
                 try:
@@ -376,7 +446,7 @@ class MaximizeHandler:
                         lat, lon = gps_info["latitude"], gps_info["longitude"]
                         success = self.maximized_map.update_location(lat, lon)
                         if success:
-                            info("最大化マップに位置情報表示成功: {lat:.6f}, {lon:.6f}")
+                            info(f"最大化マップに位置情報表示成功: {lat:.6f}, {lon:.6f}")
                         else:
                             warning("最大化マップ位置情報表示失敗")
                     else:
@@ -384,13 +454,13 @@ class MaximizeHandler:
                         self.maximized_map.show_no_gps_message()
                         
                 except Exception as gps_error:
-                    warning("GPS情報取得エラー: {gps_error}")
+                    warning(f"GPS情報取得エラー: {gps_error}")
                     self.maximized_map.show_no_gps_message()
                     
                 # レイアウト確定後にマップを再更新
                 from PyQt5.QtCore import QTimer
                 QTimer.singleShot(200, lambda: self._ensure_map_display_after_layout(current_image))
-                info("最大化マップ表示完了（遅延更新予約）: {current_image}")
+                info(f"最大化マップ表示完了（遅延更新予約）: {current_image}")
             else:
                 error("現在の画像が見つかりません、デフォルトメッセージ表示")
                 self.maximized_map.show_no_gps_message()
@@ -406,8 +476,20 @@ class MaximizeHandler:
             debug(f"  - 親: {self.maximize_container.parent()}")
             debug(f"  - 表示状態: {self.maximize_container.isVisible()}")
             
-            self.maximized_state = 'map'
-            self.main_window.show_status_message("🗺️ マップを最大化表示")
+            # 実際に表示されているかチェック
+            display_successful = (self.maximize_container.isVisible() and 
+                                self.maximize_container.size().width() > 100 and 
+                                self.maximize_container.size().height() > 100)
+            debug(f"🔍 マップ最大化表示成功チェック: {display_successful}")
+            
+            if display_successful:
+                self.maximized_state = 'map'
+                self.main_window.show_status_message("🗺️ マップを最大化表示")
+                debug(f"✅ マップ最大化状態設定完了: {self.maximized_state}")
+            else:
+                warning("❌ マップ最大化表示に失敗、状態をリセット")
+                self.maximized_state = None
+                self.main_window.show_status_message("❌ マップ最大化に失敗しました")
             
         except Exception as e:
             logging.error(f"マップ最大化エラー: {e}")
@@ -441,7 +523,7 @@ class MaximizeHandler:
                     self.maximize_container.lower()
                     info("最大化コンテナを完全非表示")
                 except Exception as e:
-                    warning("コンテナ非表示エラー: {e}")
+                    warning(f"コンテナ非表示エラー: {e}")
             
             # QCoreApplication.processEvents()を実行してUI更新を確実に実行
             from PyQt5.QtCore import QCoreApplication
@@ -463,9 +545,9 @@ class MaximizeHandler:
                             widget.hide()
                             widget.setVisible(False)
                             # 属性はクリアしない（再利用のため保持）
-                            info("{description}を非表示")
+                            info(f"{description}を非表示")
                         except Exception as e:
-                            warning("{description}非表示エラー（無視）: {e}")
+                            warning(f"{description}非表示エラー（無視）: {e}")
             
             # イベント処理を実行
             QCoreApplication.processEvents()
@@ -482,7 +564,7 @@ class MaximizeHandler:
                                 widget.hide()
                     info("レイアウト内ウィジェットを非表示")
                 except Exception as e:
-                    warning("レイアウト非表示エラー（無視）: {e}")
+                    warning(f"レイアウト非表示エラー（無視）: {e}")
             
             # 最終的なイベント処理
             QCoreApplication.processEvents()
@@ -496,7 +578,7 @@ class MaximizeHandler:
                     self.main_splitter.update()
                     info("メインスプリッターを再表示")
                 except Exception as e:
-                    warning("メインスプリッター再表示エラー: {e}")
+                    warning(f"メインスプリッター再表示エラー: {e}")
             
             # メインウィンドウの完全な再描画
             if hasattr(self.main_window, 'update'):
@@ -538,7 +620,7 @@ class MaximizeHandler:
                     self.maximize_container.lower()
                     info("緊急: 最大化コンテナ非表示")
                 except Exception as e:
-                    warning("緊急: コンテナ非表示エラー: {e}")
+                    warning(f"緊急: コンテナ非表示エラー: {e}")
             
             # すべての最大化関連ウィジェットを非表示（削除しない）
             emergency_widgets = [
@@ -552,9 +634,9 @@ class MaximizeHandler:
                         if widget and hasattr(widget, 'hide'):
                             widget.hide()
                             widget.setVisible(False)
-                        info("緊急: {attr}を非表示")
+                        info(f"緊急: {attr}を非表示")
                     except Exception as e:
-                        warning("緊急: {attr}非表示エラー（無視）: {e}")
+                        warning(f"緊急: {attr}非表示エラー（無視）: {e}")
             
             # イベント処理を実行
             from PyQt5.QtCore import QCoreApplication
@@ -568,19 +650,19 @@ class MaximizeHandler:
                     self.main_splitter.raise_()
                     info("緊急: メインスプリッター表示")
                 except Exception as e:
-                    warning("緊急: スプリッター表示エラー: {e}")
+                    warning(f"緊急: スプリッター表示エラー: {e}")
             
             # 最大化ボタンの状態をリセット
             try:
                 self.update_maximize_buttons()
                 info("緊急: ボタン状態リセット")
             except Exception as e:
-                warning("緊急: ボタンリセットエラー: {e}")
+                warning(f"緊急: ボタンリセットエラー: {e}")
             
             info("緊急復旧完了（コンテナ保持版）")
             
         except Exception as recovery_error:
-            error("緊急復旧も失敗: {recovery_error}")
+            error(f"緊急復旧も失敗: {recovery_error}")
             # 最後の手段：アプリケーション再起動を提案
             try:
                 self.main_window.show_status_message("❌ 復旧に失敗しました。アプリケーションの再起動をお勧めします。")
@@ -624,10 +706,10 @@ class MaximizeHandler:
                     if item:
                         # ファイルパスを直接取得（UserRoleの代わり）
                         selected_image = item.text()  # アイテムのテキストを使用
-                        info("画像データを取得 (thumbnail_list): {selected_image}")
+                        info(f"画像データを取得 (thumbnail_list): {selected_image}")
             
             if selected_image:
-                debug("最大化コンテンツ更新: {selected_image}")
+                debug(f"最大化コンテンツ更新: {selected_image}")
                 
                 if self.maximized_state == 'image':
                     # 直接画像を設定
@@ -647,7 +729,7 @@ class MaximizeHandler:
             if main_window:
                 main_window.raise_()
                 main_window.activateWindow()
-                info("メインウィンドウを最前面に移動: {main_window}")
+                info(f"メインウィンドウを最前面に移動: {main_window}")
             
             # 2. コンテナの可視性サイクル（複数回）
             for i in range(3):
@@ -662,7 +744,7 @@ class MaximizeHandler:
             
             # 3. ジオメトリの強制設定（固定値を使用）
             container.setGeometry(0, 40, 1400, 800)
-            info("ジオメトリ強制設定: {container.geometry()}")
+            info(f"ジオメトリ強制設定: {container.geometry()}")
             
             # 4. ウィンドウフラグの調整（コメントアウト - 問題の可能性）
             # container.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
@@ -686,29 +768,29 @@ class MaximizeHandler:
                         
         except Exception as e:
             logging.error(f"最大化コンテンツ更新エラー: {e}")
-            error("最大化コンテンツ更新エラー: {e}")
+            error(f"最大化コンテンツ更新エラー: {e}")
             import traceback
             traceback.print_exc()
     
     def _update_maximized_image_direct(self, image_path):
         """最大化時の画像を直接更新（ズーム機能維持）"""
         try:
-            debug("最大化画像設定開始: {image_path}")
+            debug(f"最大化画像設定開始: {image_path}")
             
             # 最大化されたプレビューが存在する場合、直接使用
             if hasattr(self, 'maximized_preview') and self.maximized_preview:
                 self.maximized_preview.set_image(image_path)
-                info("最大化画像設定成功 (ズーム機能付き): {image_path}")
+                info(f"最大化画像設定成功 (ズーム機能付き): {image_path}")
                 return
             
             # フォールバック: 通常のプレビューパネルを使用
             if self.preview_panel:
-                info("プレビューパネル検出: {type(self.preview_panel)}")
+                info(f"プレビューパネル検出: {type(self.preview_panel)}")
                 
                 # set_imageメソッドがある場合（ImagePreviewViewの標準メソッド）- 最優先
                 if hasattr(self.preview_panel, 'set_image'):
                     self.preview_panel.set_image(image_path)
-                    info("最大化画像設定成功 (set_image): {image_path}")
+                    info(f"最大化画像設定成功 (set_image): {image_path}")
                 
                 # ImagePreviewViewの場合
                 elif hasattr(self.preview_panel, 'image_label'):
@@ -726,7 +808,7 @@ class MaximizeHandler:
                             
                         scaled_pixmap = pixmap.scaled(max_width, max_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # type: ignore
                         self.preview_panel.image_label.setPixmap(scaled_pixmap)
-                        info("最大化画像設定成功 (image_label): {image_path}")
+                        info(f"最大化画像設定成功 (image_label): {image_path}")
                         
                 # 通常のQLabel扱いの場合
                 elif hasattr(self.preview_panel, 'setPixmap'):
@@ -743,20 +825,20 @@ class MaximizeHandler:
                             
                         scaled_pixmap = pixmap.scaled(max_width, max_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # type: ignore
                         self.preview_panel.setPixmap(scaled_pixmap)
-                        info("最大化画像設定成功 (setPixmap): {image_path}")
+                        info(f"最大化画像設定成功 (setPixmap): {image_path}")
                 
                 # load_image_from_pathメソッドがある場合
                 elif hasattr(self.preview_panel, 'load_image_from_path'):
                     self.preview_panel.load_image_from_path(image_path)
-                    info("最大化画像設定成功 (load_image_from_path): {image_path}")
+                    info(f"最大化画像設定成功 (load_image_from_path): {image_path}")
                 
                 else:
-                    error("プレビューパネルに画像設定メソッドが見つかりません: {[attr for attr in dir(self.preview_panel) if not attr.startswith('_')]}")
+                    error(f"プレビューパネルに画像設定メソッドが見つかりません: {[attr for attr in dir(self.preview_panel) if not attr.startswith('_')]}")
             else:
                 error("プレビューパネルが None です")
                 
         except Exception as e:
-            error("最大化画像直接設定エラー: {e}")
+            error(f"最大化画像直接設定エラー: {e}")
             logging.error(f"最大化画像直接設定エラー: {e}")
     
     def _update_maximized_map_direct(self, image_path):
@@ -786,9 +868,9 @@ class MaximizeHandler:
                     </html>
                     """
                     self.map_panel.view.setHtml(html_content)
-                    info("最大化マップ直接設定: {lat:.6f}, {lon:.6f}")
+                    info(f"最大化マップ直接設定: {lat:.6f}, {lon:.6f}")
         except Exception as e:
-            error("最大化マップ直接設定エラー: {e}")
+            error(f"最大化マップ直接設定エラー: {e}")
     
     def refresh_normal_content(self):
         """通常表示でのコンテンツ更新"""
@@ -938,26 +1020,26 @@ class MaximizeHandler:
                 
                 # 現在のサイズを確認
                 current_size = self.maximized_preview.size()
-                debug("レイアウト確定後のサイズ: {current_size}")
+                debug(f"レイアウト確定後のサイズ: {current_size}")
                 
                 # サイズが適切に設定されている場合のみフィット実行
                 if current_size.width() > 100 and current_size.height() > 100:
                     # レイアウト確定後に画像を再設定してフィット処理を確実に実行
                     try:
-                        debug("レイアウト確定後の画像再設定: {image_path}")
+                        debug(f"レイアウト確定後の画像再設定: {image_path}")
                         self.maximized_preview.set_image(image_path)
-                        info("遅延フィット実行成功: {current_size}")
+                        info(f"遅延フィット実行成功: {current_size}")
                     except Exception as fit_error:
-                        warning("遅延フィットエラー（画像表示は成功）: {fit_error}")
+                        warning(f"遅延フィットエラー（画像表示は成功）: {fit_error}")
                     
                 else:
-                    warning("ウィジェットサイズが未確定、再試行: {current_size}")
+                    warning(f"ウィジェットサイズが未確定、再試行: {current_size}")
                     # 再度遅延実行
                     from PyQt5.QtCore import QTimer
                     QTimer.singleShot(200, lambda: self._ensure_fit_after_layout(image_path))
                     
         except Exception as e:
-            error("遅延フィット処理エラー: {e}")
+            error(f"遅延フィット処理エラー: {e}")
     
     def _ensure_map_display_after_layout(self, image_path):
         """レイアウト確定後にマップを適切に表示"""
@@ -969,7 +1051,7 @@ class MaximizeHandler:
                 
                 # 現在のサイズを確認
                 current_size = self.maximized_map.size()
-                debug("マップレイアウト確定後のサイズ: {current_size}")
+                debug(f"マップレイアウト確定後のサイズ: {current_size}")
                 
                 # サイズが適切に設定されている場合のみマップ更新実行
                 if current_size.width() > 100 and current_size.height() > 100:
@@ -980,10 +1062,10 @@ class MaximizeHandler:
                         
                         if gps_info and "latitude" in gps_info and "longitude" in gps_info:
                             lat, lon = gps_info["latitude"], gps_info["longitude"]
-                            debug("レイアウト確定後のマップ更新: {lat:.6f}, {lon:.6f}")
+                            debug(f"レイアウト確定後のマップ更新: {lat:.6f}, {lon:.6f}")
                             success = self.maximized_map.update_location(lat, lon)
                             if success:
-                                info("遅延マップ表示成功: {current_size}")
+                                info(f"遅延マップ表示成功: {current_size}")
                             else:
                                 warning("遅延マップ表示失敗")
                         else:
@@ -991,17 +1073,17 @@ class MaximizeHandler:
                             self.maximized_map.show_no_gps_message()
                             
                     except Exception as gps_error:
-                        warning("遅延GPS取得エラー: {gps_error}")
+                        warning(f"遅延GPS取得エラー: {gps_error}")
                         self.maximized_map.show_no_gps_message()
                     
                 else:
-                    warning("マップウィジェットサイズが未確定、再試行: {current_size}")
+                    warning(f"マップウィジェットサイズが未確定、再試行: {current_size}")
                     # 再度遅延実行
                     from PyQt5.QtCore import QTimer
                     QTimer.singleShot(300, lambda: self._ensure_map_display_after_layout(image_path))
                     
         except Exception as e:
-            error("遅延マップ表示処理エラー: {e}")
+            error(f"遅延マップ表示処理エラー: {e}")
     
     def _apply_current_theme_to_maximized_widgets(self):
         """最大化されたウィジェットに現在のテーマを適用"""
@@ -1061,10 +1143,10 @@ class MaximizeHandler:
             # テーマカラーを適用
             if theme_colors:
                 self._apply_theme_colors_to_widgets(theme_colors)
-                info("最大化ウィジェットにテーマ適用完了: {theme_colors}")
+                info(f"最大化ウィジェットにテーマ適用完了: {theme_colors}")
                 
         except Exception as e:
-            error("テーマ適用エラー: {e}")
+            error(f"テーマ適用エラー: {e}")
             logging.error(f"最大化ウィジェットテーマ適用エラー: {e}")
     
     def _apply_theme_colors_to_widgets(self, theme_colors):
@@ -1186,7 +1268,7 @@ class MaximizeHandler:
             info("最大化ウィジェットテーマ適用完了")
             
         except Exception as e:
-            error("テーマカラー適用エラー: {e}")
+            error(f"テーマカラー適用エラー: {e}")
             logging.error(f"テーマカラー適用エラー: {e}")
     
     def on_theme_changed(self, theme_name):
@@ -1198,7 +1280,7 @@ class MaximizeHandler:
                 from PyQt5.QtCore import QTimer
                 QTimer.singleShot(100, lambda: self._apply_current_theme_to_maximized_widgets())
         except Exception as e:
-            error("テーマ変更時のエラー: {e}")
+            error(f"テーマ変更時のエラー: {e}")
             logging.error(f"テーマ変更時エラー: {e}")
     
     def setup_theme_change_listener(self):
@@ -1212,5 +1294,5 @@ class MaximizeHandler:
                     info("テーマ変更リスナー設定完了")
                     return True
         except Exception as e:
-            warning("テーマ変更リスナー設定エラー: {e}")
+            warning(f"テーマ変更リスナー設定エラー: {e}")
         return False

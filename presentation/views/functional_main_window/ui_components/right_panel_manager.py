@@ -302,11 +302,41 @@ class RightPanelManager:
     
     def set_event_handlers(self, toggle_image_maximize, toggle_map_maximize):
         """イベントハンドラを設定"""
-        if self.maximize_image_btn:
-            self.maximize_image_btn.clicked.connect(toggle_image_maximize)
+        from utils.debug_logger import debug
+        debug(f"🔧 最大化イベントハンドラ設定: image_btn={bool(self.maximize_image_btn)}, map_btn={bool(self.maximize_map_btn)}")
+        debug(f"🔧 ハンドラ関数: toggle_image={toggle_image_maximize}, toggle_map={toggle_map_maximize}")
         
-        if self.maximize_map_btn:
-            self.maximize_map_btn.clicked.connect(toggle_map_maximize)
+        if self.maximize_image_btn and toggle_image_maximize:
+            # デバッグ用ラッパー関数
+            def debug_image_maximize():
+                debug("🖼️ 画像最大化ボタンがクリックされました")
+                try:
+                    toggle_image_maximize()
+                except Exception as e:
+                    error(f"画像最大化エラー: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            self.maximize_image_btn.clicked.connect(debug_image_maximize)
+            debug("✅ 画像最大化ボタンのイベントハンドラを設定")
+        else:
+            debug(f"❌ 画像最大化ボタン設定失敗: btn={bool(self.maximize_image_btn)}, handler={bool(toggle_image_maximize)}")
+        
+        if self.maximize_map_btn and toggle_map_maximize:
+            # デバッグ用ラッパー関数
+            def debug_map_maximize():
+                debug("🗺️ マップ最大化ボタンがクリックされました")
+                try:
+                    toggle_map_maximize()
+                except Exception as e:
+                    error(f"マップ最大化エラー: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            self.maximize_map_btn.clicked.connect(debug_map_maximize)
+            debug("✅ マップ最大化ボタンのイベントハンドラを設定")
+        else:
+            debug(f"❌ マップ最大化ボタン設定失敗: btn={bool(self.maximize_map_btn)}, handler={bool(toggle_map_maximize)}")
         
         # ダブルクリックイベントの設定
         self._setup_double_click_events(toggle_image_maximize, toggle_map_maximize)

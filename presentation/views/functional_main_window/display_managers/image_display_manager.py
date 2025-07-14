@@ -203,9 +203,9 @@ class ImageDisplayManager:
         """EXIF情報を取得"""
         try:
             # 画像ユーティリティから情報を取得
-            from logic.image_utils import extract_image_metadata
-from utils.debug_logger import debug, info, warning, error, verbose
-            image_info = extract_image_metadata(image_path)
+            from logic.image_utils import extract_image_info
+            
+            image_info = extract_image_info(image_path)
             
             if not image_info:
                 return {}

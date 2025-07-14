@@ -122,28 +122,66 @@ class FolderEventHandler:
             folder_path (str): 読み込むフォルダパス
         """
         try:
+            debug(f"フォルダ読み込み開始: {folder_path}")
+            
+            # パス検証
+            if not folder_path:
+                warning("空のフォルダパスが指定されました")
+                return
+                
+            if not os.path.exists(folder_path):
+                warning(f"フォルダが存在しません: {folder_path}")
+                return
+                
+            if not os.path.isdir(folder_path):
+                warning(f"ディレクトリではありません: {folder_path}")
+                return
+                
+            # 読み取り権限チェック
+            if not os.access(folder_path, os.R_OK):
+                error(f"読み取り権限がありません: {folder_path}")
+                QMessageBox.warning(self.main_window, "エラー", f"アクセス権限がありません: {folder_path}")
+                return
+            
+            # Qt イベント処理を実行（安全性向上）
+            from PyQt5.QtCore import QCoreApplication
+            QCoreApplication.processEvents()
+            
             # パスを正規化
             folder_path = os.path.normpath(folder_path)
             self.current_folder = folder_path
+            
+            debug(f"フォルダパス正規化完了: {folder_path}")
             
             # 履歴に追加（履歴ナビゲーション時以外）
             self._add_to_history(folder_path)
             
             # アドレスバーを更新
             if self.address_bar:
-                self.address_bar.setText("")
-                self.address_bar.setText(folder_path)
+                # 安全にアドレスバー更新
+                try:
+                    self.address_bar.setText("")
+                    QCoreApplication.processEvents()
+                    self.address_bar.setText(folder_path)
+                except Exception as addr_e:
+                    warning(f"アドレスバー更新エラー: {addr_e}")
             
             # 画像ファイル検索
             image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
             image_files = []
             
-            folder = Path(folder_path)
-            for file_path in folder.iterdir():
-                if file_path.is_file() and file_path.suffix.lower() in image_extensions:
-                    image_files.append(str(file_path))
-            
-            self.current_images = image_files
+            try:
+                folder = Path(folder_path)
+                for file_path in folder.iterdir():
+                    if file_path.is_file() and file_path.suffix.lower() in image_extensions:
+                        image_files.append(str(file_path))
+                        
+                self.current_images = image_files
+                debug(f"画像ファイル検索完了: {len(image_files)}枚")
+                
+            except Exception as search_e:
+                warning(f"画像ファイル検索エラー: {search_e}")
+                self.current_images = []
             
             # フォルダ内容表示を更新
             self._update_folder_content(folder_path)
@@ -154,7 +192,20 @@ class FolderEventHandler:
             # サムネイル更新
             self._update_thumbnails(image_files)
             
+            debug(f"フォルダ読み込み完了: {folder_path}")
+            
+        except PermissionError as pe:
+            error(f"アクセス権限エラー: {pe}")
+            QMessageBox.warning(self.main_window, "エラー", f"アクセス権限エラー: {pe}")
+            self.main_window.show_status_message(f"❌ アクセス権限エラー")
+        except OSError as oe:
+            error(f"OSエラー: {oe}")
+            QMessageBox.warning(self.main_window, "エラー", f"システムエラー: {oe}")
+            self.main_window.show_status_message(f"❌ システムエラー")
         except Exception as e:
+            error(f"フォルダ読み込みエラー: {e}")
+            import traceback
+            traceback.print_exc()
             QMessageBox.warning(self.main_window, "エラー", f"フォルダ読み込みエラー: {e}")
             self.main_window.show_status_message(f"❌ フォルダ読み込みエラー: {e}")
             logging.error(f"フォルダ読み込みエラー: {e}")
@@ -165,7 +216,22 @@ class FolderEventHandler:
             if not self.folder_content_list:
                 return
             
-            self.folder_content_list.clear()
+            # Qt のイベント処理を実行
+            from PyQt5.QtCore import QCoreApplication
+            QCoreApplication.processEvents()
+            
+            # 安全にクリア
+            try:
+                for i in range(self.folder_content_list.count()):
+                    item = self.folder_content_list.item(i)
+                    if item:
+                        item.setData(256, None)
+                
+                self.folder_content_list.clear()
+                QCoreApplication.processEvents()
+                
+            except Exception as clear_error:
+                warning(f"フォルダコンテンツクリア時エラー（無視）: {clear_error}")
             
             if not folder_path or not os.path.exists(folder_path):
                 return
@@ -176,11 +242,20 @@ class FolderEventHandler:
             folder = Path(folder_path)
             
             # 親フォルダへのリンク（ルートでない場合）
-            if folder.parent != folder:
-                parent_item = QListWidgetItem("📁 .. (親フォルダ)")
-                parent_item.setData(256, str(folder.parent))  # Qt.UserRole = 256
-                parent_item.setToolTip(str(folder.parent))
-                self.folder_content_list.addItem(parent_item)
+            try:
+                if folder.parent != folder:
+                    parent_path = str(folder.parent)
+                    # 親フォルダの存在とアクセス権限チェック
+                    if os.path.exists(parent_path) and os.access(parent_path, os.R_OK):
+                        parent_item = QListWidgetItem("📁 .. (親フォルダ)")
+                        parent_item.setData(256, parent_path)  # Qt.UserRole = 256
+                        parent_item.setToolTip(parent_path)
+                        self.folder_content_list.addItem(parent_item)
+                        debug(f"親フォルダ項目追加: {parent_path}")
+                    else:
+                        debug(f"親フォルダアクセス不可: {parent_path}")
+            except Exception as parent_e:
+                warning(f"親フォルダ項目作成エラー: {parent_e}")
             
             # フォルダとファイルを取得
             items = []
@@ -200,12 +275,12 @@ class FolderEventHandler:
                             file_item = QListWidgetItem(f"🖼️ {item_path.name}")
                             file_item.setData(256, str(item_path))  # Qt.UserRole = 256
                             file_item.setToolTip(str(item_path))
-                            items.append((file_item, 1))  # 画像ファイルは2番目
+                            items.append((file_item, 1))  # 画像ファイルは次
                         else:
                             file_item = QListWidgetItem(f"📄 {item_path.name}")
                             file_item.setData(256, str(item_path))  # Qt.UserRole = 256
                             file_item.setToolTip(str(item_path))
-                            items.append((file_item, 2))  # その他ファイルは最後
+                            items.append((file_item, 2))  # その他のファイルは最後
             
             except PermissionError:
                 error_item = QListWidgetItem("❌ アクセス権限がありません")
@@ -244,8 +319,27 @@ class FolderEventHandler:
                 
             info("サムネイルリスト取得成功: {type(thumbnail_widget)}")
             
-            # サムネイル表示をクリア
-            thumbnail_widget.clear()
+            # Qt のイベント処理を実行してから安全にクリア
+            from PyQt5.QtCore import QCoreApplication
+            QCoreApplication.processEvents()
+            
+            # 既存のアイテムを安全に削除
+            try:
+                for i in range(thumbnail_widget.count()):
+                    item = thumbnail_widget.item(i)
+                    if item:
+                        # アイテムのデータをクリア
+                        item.setData(256, None)
+                        item.setIcon(None)
+                
+                # 全体をクリア
+                thumbnail_widget.clear()
+                
+                # イベント処理を実行
+                QCoreApplication.processEvents()
+                
+            except Exception as clear_error:
+                warning(f"サムネイルクリア時エラー（無視）: {clear_error}")
             
             added_count = 0
             max_thumbnails = 50  # 表示上限
@@ -253,6 +347,8 @@ class FolderEventHandler:
             for i, image_file in enumerate(image_files[:max_thumbnails]):
                 if i % 10 == 0:
                     debug(f"🔄 サムネイル処理進捗: {i}/{min(len(image_files), max_thumbnails)}")
+                    # 定期的にイベント処理を実行
+                    QCoreApplication.processEvents()
                 
                 try:
                     # サムネイル画像を作成

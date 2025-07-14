@@ -58,7 +58,7 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self.folder_panel = None
         self.address_bar = None
         
-        # 管理クラス参照（後で設定）
+        # 管理クラス参照（setup_managersで設定される）
         self.left_panel_manager = None
         self.right_panel_manager = None
         self.address_bar_manager = None
@@ -136,15 +136,36 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self.folder_btn.setMaximumHeight(30)
         toolbar_layout.addWidget(self.folder_btn)
         
-        # アドレスバーエリア（詳細は後で設定）
-        def dummy_callback(*args, **kwargs):
-            pass  # 暫定的なダミーコールバック
+        # アドレスバーエリア（実際のコールバックを設定）
+        def on_address_changed_callback(path):
+            """アドレスバーのパス変更時のコールバック"""
+            if hasattr(self, 'address_bar_manager') and self.address_bar_manager:
+                self.address_bar_manager.on_address_changed(path)
+        
+        def on_parent_button_callback():
+            """親フォルダボタンクリック時のコールバック"""
+            if hasattr(self, 'address_bar_manager') and self.address_bar_manager:
+                self.address_bar_manager.go_to_parent_folder()
         
         self.controls_widget, self.address_bar, self.parent_button = create_controls(
-            dummy_callback,  # 暫定コールバック
-            dummy_callback   # 暫定コールバック
+            on_address_changed_callback,
+            on_parent_button_callback
         )
         self.controls_widget.setMaximumHeight(35)
+        # アドレスバーの表示を確認
+        if self.address_bar:
+            debug(f"アドレスバー生成確認: {type(self.address_bar)}, visible: {self.address_bar.isVisible()}")
+            # 明示的に表示設定
+            self.address_bar.setVisible(True)
+            self.address_bar.show()
+            # サイズ設定
+            self.address_bar.setMinimumWidth(200)
+            debug(f"アドレスバーサイズ設定: {self.address_bar.size()}")
+        
+        if self.controls_widget:
+            debug(f"コントロールウィジェット: {type(self.controls_widget)}, visible: {self.controls_widget.isVisible()}")
+            self.controls_widget.show()
+        
         toolbar_layout.addWidget(self.controls_widget, 1)
         
         # ナビゲーションコントロールの参照を取得
@@ -393,12 +414,15 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
             self.theme_toggle_btn.clicked.connect(self.theme_event_handler.toggle_theme)
         
         # アドレスバー関連
-        if self.address_bar_manager and self.folder_event_handler:
-            # アドレスバーのコールバックを設定
-            self.address_bar_manager.set_callbacks(
-                self.folder_event_handler.on_address_changed,
-                self.folder_event_handler.go_to_parent_folder
+        if self.address_bar_manager and self.folder_event_handler and address_bar_ref:
+            # アドレスバーマネージャーにコンポーネントを設定
+            self.address_bar_manager.set_components(
+                address_bar=address_bar_ref,
+                folder_handler=self.folder_event_handler
             )
+            debug(f"アドレスバーマネージャーにUIコンポーネント参照を設定: {address_bar_ref}")
+        else:
+            warning(f"アドレスバー設定スキップ: manager={bool(self.address_bar_manager)}, folder_handler={bool(self.folder_event_handler)}, address_bar={bool(address_bar_ref)}")
         
         # ナビゲーションコントロールのシグナル接続
         if hasattr(self, 'address_bar_manager') and self.address_bar_manager and hasattr(self.address_bar_manager, 'navigation_controls'):

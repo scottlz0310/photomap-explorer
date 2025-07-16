@@ -73,7 +73,7 @@ class MapDisplayManager:
         """画像からGPS情報を抽出"""
         try:
             from logic.image_utils import extract_gps_coords
-from utils.debug_logger import debug, info, warning, error, verbose
+            from utils.debug_logger import debug, info, warning, error, verbose
             return extract_gps_coords(image_path)
             
         except ImportError:

@@ -229,3 +229,21 @@ class FolderEventHandler:
         except Exception as e:
             logging.error(f"フォルダアイテムクリックエラー: {e}")
             self.main_window.show_status_message(f"❌ アイテム選択エラー: {e}")
+    
+    def on_folder_item_double_clicked(self, item):
+        """フォルダアイテムダブルクリック時の処理"""
+        try:
+            item_path = item.data(Qt.UserRole)  # type: ignore
+            if item_path and os.path.exists(item_path):
+                if os.path.isdir(item_path):
+                    # フォルダの場合は移動
+                    self.load_folder(item_path)
+                    self.main_window.show_status_message(f"📁 フォルダ移動: {os.path.basename(item_path)}")
+                elif os.path.isfile(item_path):
+                    # 画像ファイルの場合は画像表示管理に委譲
+                    if self.main_window.image_event_hdlr:
+                        self.main_window.image_event_hdlr.on_image_selected(item)
+                        
+        except Exception as e:
+            logging.error(f"フォルダアイテムダブルクリックエラー: {e}")
+            self.main_window.show_status_message(f"❌ アイテムダブルクリックエラー: {e}")

@@ -5,7 +5,34 @@
 """
 
 from PyQt5.QtCore import QObject
-from .theme_manager import get_theme_manager, ThemeMode
+from .core.theme_engine import ThemeMode
+
+# 一時的なダミー実装
+class DummySignal:
+    def connect(self, func):
+        pass
+
+class DummyThemeManager:
+    def __init__(self):
+        self.theme_changed = DummySignal()
+    
+    def get_theme_definition(self, name):
+        return {}
+    
+    def get_current_theme_name(self):
+        return "light"
+    
+    def get_current_theme(self):
+        return {}
+    
+    def get_color(self, color_key):
+        return "#000000"
+    
+    def get_style(self, style_key):
+        return ""
+
+def get_theme_manager():
+    return DummyThemeManager()
 
 
 class ThemeAwareMixin:

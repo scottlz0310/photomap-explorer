@@ -13,7 +13,7 @@ from PyQt5.QtGui import QIcon
 from ui.controls import create_controls
 
 # テーマシステム
-from presentation.themes import ThemeAwareMixin
+from presentation.themes.theme_mixin import ThemeAwareMixin
 
 
 class MainWindowCore(QMainWindow, ThemeAwareMixin):
@@ -84,7 +84,7 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self._setup_toolbar_area()
         
         # メインスプリッターの準備
-        self.main_splitter = QSplitter(Qt.Horizontal)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_layout.addWidget(self.main_splitter)
         
         # 最大化コンテナの準備
@@ -167,19 +167,95 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     
     def _setup_manager_references(self):
         """管理クラス間の参照を設定"""
-        # 左パネル作成
-        if self.left_panel_manager and self.main_splitter:
-            left_panel = self.left_panel_manager.create_panel()
-            self.main_splitter.addWidget(left_panel)
-        
-        # 右パネル作成
-        if self.right_panel_manager and self.main_splitter:
-            right_panel = self.right_panel_manager.create_panel()
-            self.main_splitter.addWidget(right_panel)
-        
-        # スプリッターサイズ調整
-        if self.main_splitter:
-            self.main_splitter.setSizes([600, 800])
+        try:
+            from utils.debug_logger import debug, info, error
+            info("管理クラス間の参照設定開始")
+            
+            # デバッグ: 詳細な条件確認
+            debug(f"self.left_panel_manager: {self.left_panel_manager}")
+            debug(f"self.main_splitter: {self.main_splitter}")
+            debug(f"self.right_panel_manager: {self.right_panel_manager}")
+            
+            # 左パネル作成
+            debug("左パネル作成条件チェック開始...")
+            if self.left_panel_manager is not None and self.main_splitter is not None:
+                debug("左パネル作成開始...")
+                left_panel = self.left_panel_manager.create_panel()
+                debug(f"左パネル作成完了: {left_panel is not None}")
+                if left_panel:
+                    self.main_splitter.addWidget(left_panel)
+                    left_panel.show()  # 左パネルも強制表示
+                    info("左パネルをメインスプリッターに追加完了")
+                else:
+                    error("左パネル作成に失敗")
+            else:
+                error(f"左パネル作成条件未満: left_panel_manager={self.left_panel_manager is not None}, main_splitter={self.main_splitter is not None}")
+            
+            # 右パネル作成
+            debug("右パネル作成条件チェック開始...")
+            if self.right_panel_manager is not None and self.main_splitter is not None:
+                debug("右パネル作成開始...")
+                right_panel = self.right_panel_manager.create_panel()
+                debug(f"右パネル作成完了: {right_panel is not None}")
+                if right_panel:
+                    self.main_splitter.addWidget(right_panel)
+                    info("右パネルをメインスプリッターに追加完了")
+                    
+                    # 右パネルの詳細デバッグ
+                    debug(f"右パネル追加後サイズ: {right_panel.size()}")
+                    debug(f"右パネル追加後可視性: {right_panel.isVisible()}")
+                    
+                    # 強制的に右パネルを表示
+                    right_panel.show()
+                    debug(f"強制表示後の右パネル可視性: {right_panel.isVisible()}")
+                    
+                    if hasattr(self.right_panel_manager, 'right_splitter') and self.right_panel_manager.right_splitter:
+                        debug(f"右スプリッターサイズ: {self.right_panel_manager.right_splitter.size()}")
+                        debug(f"右スプリッター子要素数: {self.right_panel_manager.right_splitter.count()}")
+                        debug(f"右スプリッター可視性: {self.right_panel_manager.right_splitter.isVisible()}")
+                        self.right_panel_manager.right_splitter.show()
+                        debug(f"強制表示後の右スプリッター可視性: {self.right_panel_manager.right_splitter.isVisible()}")
+                else:
+                    error("右パネル作成に失敗")
+            else:
+                error(f"右パネル作成条件未満: right_panel_manager={self.right_panel_manager is not None}, main_splitter={self.main_splitter is not None}")
+            
+            # スプリッターサイズ調整
+            if self.main_splitter:
+                debug("スプリッターサイズ調整...")
+                self.main_splitter.setSizes([600, 800])
+                
+                # スプリッター調整後のデバッグ
+                debug(f"メインスプリッター最終サイズ配分: {self.main_splitter.sizes()}")
+                for i in range(self.main_splitter.count()):
+                    widget = self.main_splitter.widget(i)
+                    if widget:
+                        debug(f"子ウィジェット{i}最終サイズ: {widget.size()}, 可視性: {widget.isVisible()}")
+                    else:
+                        debug(f"子ウィジェット{i}: None")
+                
+                info(f"スプリッターサイズ調整完了: 子要素数={self.main_splitter.count()}")
+                
+            info("管理クラス間の参照設定完了")
+            
+            # 最終的にメインスプリッター全体を強制表示
+            debug("メインスプリッター最終強制表示開始...")
+            if self.main_splitter:
+                self.main_splitter.show()
+                debug(f"メインスプリッター強制表示後: 可視性={self.main_splitter.isVisible()}")
+                for i in range(self.main_splitter.count()):
+                    widget = self.main_splitter.widget(i)
+                    if widget:
+                        widget.show()
+                        debug(f"子ウィジェット{i}強制表示後: 可視性={widget.isVisible()}")
+            
+            debug("管理クラス間の参照設定と表示設定完了")
+            
+        except Exception as e:
+            from utils.debug_logger import error
+            error(f"管理クラス参照設定エラー: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _connect_event_handlers(self):
         """イベントハンドラの接続"""
@@ -191,12 +267,11 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         if self.theme_event_handler:
             self.theme_toggle_btn.clicked.connect(self.theme_event_handler.toggle_theme)
         
-        # アドレスバー関連
+        # アドレスバー関連（set_componentsメソッドを使用）
         if self.address_bar_manager and self.folder_event_handler:
-            # アドレスバーのコールバックを設定
-            self.address_bar_manager.set_callbacks(
-                self.folder_event_handler.on_address_changed,
-                self.folder_event_handler.go_to_parent_folder
+            self.address_bar_manager.set_components(
+                self.address_bar,
+                self.folder_event_handler
             )
     
     def show_status_message(self, message, timeout=0):
@@ -221,7 +296,8 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         
         # 初期テーマ設定
         if self.theme_event_handler:
-            self.theme_event_handler.update_theme_button()
+            # self.theme_event_handler.update_theme_button()  # メソッドが存在しない
+            self.theme_event_handler.initialize_theme()  # 代替メソッド
         
         self.apply_theme()
         
@@ -231,8 +307,20 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         
         # ステータス更新
         self.show_status_message("新UI (Clean Architecture) v2.2.0 で起動しました")
+        
+        # 最終的な表示確認とデバッグ
+        from utils.debug_logger import debug, info
+        debug("ファイナライズ後の表示状態確認...")
+        if self.main_splitter:
+            debug(f"ファイナライズ後メインスプリッター可視性: {self.main_splitter.isVisible()}")
+            for i in range(self.main_splitter.count()):
+                widget = self.main_splitter.widget(i)
+                if widget:
+                    debug(f"ファイナライズ後子ウィジェット{i}可視性: {widget.isVisible()}")
+                    widget.show()  # 再度強制表示
     
     def _apply_delayed_theme(self):
         """遅延テーマ適用"""
         if self.address_bar_manager:
-            self.address_bar_manager.apply_delayed_theme()
+            # self.address_bar_manager.apply_delayed_theme()  # メソッドが存在しない
+            pass  # 一時的にスキップ

@@ -260,12 +260,10 @@ def create_controls(on_address_changed_callback=None, on_parent_button_callback=
     if on_address_changed_callback:
         controls_container.path_changed.connect(on_address_changed_callback)
     
-    # 親ボタンの参照を取得（統合アドレスバー内のツールバーから）
-    parent_button = None
-    toolbar = controls_container.get_toolbar()
-    if toolbar and hasattr(toolbar, 'parent_button'):
-        parent_button = toolbar.parent_button
-        if on_parent_button_callback and parent_button:
-            parent_button.clicked.connect(on_parent_button_callback)
+    # 親ボタンを作成（一時的なダミー）
+    from PyQt5.QtWidgets import QPushButton
+    parent_button = QPushButton("↑")
+    if on_parent_button_callback:
+        parent_button.clicked.connect(on_parent_button_callback)
     
     return controls_container, controls_container, parent_button

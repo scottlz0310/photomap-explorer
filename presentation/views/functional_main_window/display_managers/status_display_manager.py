@@ -225,7 +225,7 @@ class StatusDisplayManager:
         """画像のサイズを取得"""
         try:
             from PyQt5.QtGui import QPixmap
-from utils.debug_logger import debug, info, warning, error, verbose
+            from utils.debug_logger import debug, info, warning, error, verbose
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
                 return f"{pixmap.width()}x{pixmap.height()}"

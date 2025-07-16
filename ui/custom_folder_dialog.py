@@ -100,7 +100,7 @@ class CustomFolderDialog(QDialog):
     
     def _setup_main_content(self, layout):
         """メインコンテンツエリアを設定"""
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         
         # 左パネル：フォルダツリー
         self._setup_folder_tree(splitter)

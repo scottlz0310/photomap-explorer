@@ -322,7 +322,8 @@ class StatusDisplayManager:
                 return
             
             # フォールバック: コンソール出力
-            print(f"[STATUS] {message}")
+            from utils.debug_logger import info
+            info(f"[STATUS] {message}")
             
         except Exception as e:
             logging.error(f"ステータスメッセージ表示エラー: {e}")

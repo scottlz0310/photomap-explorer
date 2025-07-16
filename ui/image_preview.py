@@ -21,6 +21,16 @@ class ImagePreviewView(QGraphicsView):
         self._pixmap_item.setPixmap(pixmap)
         self.fitInView(self._pixmap_item, Qt.KeepAspectRatio)
 
+    def display_image(self, image_path: str):
+        """画像ファイルパスから画像を表示"""
+        import os
+        if os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                self.set_image(pixmap)
+                return True
+        return False
+
     def wheelEvent(self, event):
         """マウスホイールでズームイン・ズームアウト"""
         if not self._pixmap_item.pixmap().isNull():

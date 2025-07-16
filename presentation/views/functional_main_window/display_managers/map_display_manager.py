@@ -6,7 +6,7 @@
 """
 
 import os
-import logging
+from utils.debug_logger import debug, info, warning, error, verbose
 
 
 class MapDisplayManager:
@@ -65,7 +65,7 @@ class MapDisplayManager:
                 return False
                 
         except Exception as e:
-            logging.error(f"マップ更新エラー: {e}")
+            error(f"マップ更新エラー: {e}")
             self.main_window.show_status_message(f"❌ マップ更新エラー: {e}")
             return False
     
@@ -77,10 +77,10 @@ class MapDisplayManager:
             return extract_gps_coords(image_path)
             
         except ImportError:
-            logging.warning("GPS抽出モジュールが利用できません")
+            warning("GPS抽出モジュールが利用できません")
             return None
         except Exception as e:
-            logging.error(f"GPS情報抽出エラー: {e}")
+            error(f"GPS情報抽出エラー: {e}")
             return None
     
     def _update_map_display(self, lat, lon, image_path):
@@ -99,7 +99,7 @@ class MapDisplayManager:
                 return self._show_basic_gps_info(lat, lon, image_path)
                 
         except Exception as e:
-            logging.error(f"マップ表示更新エラー: {e}")
+            error(f"マップ表示更新エラー: {e}")
             return False
     
     def _show_gps_html(self, lat, lon, image_path):
@@ -178,7 +178,7 @@ class MapDisplayManager:
             return True
             
         except Exception as e:
-            logging.error(f"GPS HTML表示エラー: {e}")
+            error(f"GPS HTML表示エラー: {e}")
             return False
     
     def _show_no_gps_display(self):
@@ -190,7 +190,7 @@ class MapDisplayManager:
                 return self._show_basic_no_gps_info()
                 
         except Exception as e:
-            logging.error(f"GPS無し表示エラー: {e}")
+            error(f"GPS無し表示エラー: {e}")
             return False
     
     def _show_no_gps_html(self):
@@ -258,7 +258,7 @@ class MapDisplayManager:
             return True
             
         except Exception as e:
-            logging.error(f"GPS無し HTML表示エラー: {e}")
+            error(f"GPS無し HTML表示エラー: {e}")
             return False
     
     def _show_basic_gps_info(self, lat, lon, image_path):
@@ -271,7 +271,7 @@ class MapDisplayManager:
             return False
             
         except Exception as e:
-            logging.error(f"基本GPS情報表示エラー: {e}")
+            error(f"基本GPS情報表示エラー: {e}")
             return False
     
     def _show_basic_no_gps_info(self):
@@ -283,7 +283,7 @@ class MapDisplayManager:
             return False
             
         except Exception as e:
-            logging.error(f"基本GPS無し情報表示エラー: {e}")
+            error(f"基本GPS無し情報表示エラー: {e}")
             return False
     
     def _get_theme_colors(self):
@@ -301,7 +301,7 @@ class MapDisplayManager:
             return self._get_default_theme_colors()
             
         except Exception as e:
-            logging.error(f"テーマ色取得エラー: {e}")
+            error(f"テーマ色取得エラー: {e}")
             return self._get_default_theme_colors()
     
     def _get_dark_theme_colors(self):
@@ -337,7 +337,7 @@ class MapDisplayManager:
                 return self._show_basic_initial_info()
                 
         except Exception as e:
-            logging.error(f"初期画面表示エラー: {e}")
+            error(f"初期画面表示エラー: {e}")
             return False
     
     def _show_initial_html(self):
@@ -405,7 +405,7 @@ class MapDisplayManager:
             return True
             
         except Exception as e:
-            logging.error(f"初期HTML表示エラー: {e}")
+            error(f"初期HTML表示エラー: {e}")
             return False
     
     def _show_basic_initial_info(self):
@@ -417,7 +417,7 @@ class MapDisplayManager:
             return False
             
         except Exception as e:
-            logging.error(f"基本初期情報表示エラー: {e}")
+            error(f"基本初期情報表示エラー: {e}")
             return False
     
     def clear_map(self):
@@ -430,7 +430,7 @@ class MapDisplayManager:
             self.show_initial_screen()
             
         except Exception as e:
-            logging.error(f"マップクリアエラー: {e}")
+            error(f"マップクリアエラー: {e}")
     
     def refresh_map(self):
         """現在の画像でマップを再表示"""
@@ -439,7 +439,7 @@ class MapDisplayManager:
                 self.update_map(self.current_image)
                 
         except Exception as e:
-            logging.error(f"マップ再表示エラー: {e}")
+            error(f"マップ再表示エラー: {e}")
     
     def get_current_location(self):
         """現在の位置情報を取得"""
@@ -459,4 +459,4 @@ class MapDisplayManager:
                 self.show_initial_screen()
                 
         except Exception as e:
-            logging.error(f"マップテーマ適用エラー: {e}")
+            error(f"マップテーマ適用エラー: {e}")

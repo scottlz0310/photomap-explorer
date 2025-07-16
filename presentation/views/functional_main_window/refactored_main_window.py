@@ -5,6 +5,7 @@ Refactored Functional Main Window
 """
 
 import os
+import logging
 from .main_window_core import MainWindowCore
 from .ui_components.left_panel_manager import LeftPanelManager
 from .ui_components.right_panel_manager import RightPanelManager
@@ -57,7 +58,8 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
             self.status_display_mgr = StatusDisplayManager(self)
             
         except Exception as e:
-            print(f"管理クラス初期化エラー: {e}")
+            from utils.debug_logger import error
+            error(f"管理クラス初期化エラー: {e}")
             # フォールバック: 最小構成
             self.left_panel_mgr = LeftPanelManager(self)
             self.right_panel_mgr = RightPanelManager(self)
@@ -93,10 +95,27 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
         """イベントハンドラを設定"""
         # 左パネルのイベント（適切なハンドラに委譲）
         if self.left_panel_mgr and self.folder_event_hdlr and self.image_event_hdlr:
+            logging.info(f"🔍 set_event_handlers呼び出し開始")
+            logging.info(f"🔍 image_event_hdlr.on_image_selected: {self.image_event_hdlr.on_image_selected}")
             self.left_panel_mgr.set_event_handlers(
                 self.folder_event_hdlr.on_folder_item_clicked,
                 self.folder_event_hdlr.on_folder_item_double_clicked,
                 self.image_event_hdlr.on_image_selected
+            )
+            logging.info(f"🔍 set_event_handlers呼び出し完了")
+        
+        # イベントハンドラにコンポーネント参照を設定
+        if self.folder_event_hdlr:
+            self.folder_event_hdlr.set_components(
+                getattr(self, 'address_bar', None),
+                getattr(self, 'folder_content_list', None),
+                getattr(self.left_panel_mgr, 'thumbnail_list', None) if self.left_panel_mgr else None
+            )
+        
+        if self.image_event_hdlr:
+            self.image_event_hdlr.set_components(
+                getattr(self, 'preview_panel', None),
+                getattr(self, 'map_panel', None)
             )
         
         # 右パネルのイベント（適切なハンドラに委譲）
@@ -118,11 +137,13 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
     # 暫定的なイベントハンドラメソッド（後で専用クラスに移動）
     def _on_folder_item_clicked(self, item):
         """フォルダ項目クリック（暫定）"""
-        print(f"フォルダ項目クリック: {item.text()}")
+        from utils.debug_logger import debug
+        debug(f"フォルダ項目クリック: {item.text()}")
     
     def _on_folder_item_double_clicked(self, item):
         """フォルダ項目ダブルクリック（暫定）"""
-        print(f"フォルダ項目ダブルクリック: {item.text()}")
+        from utils.debug_logger import debug
+        debug(f"フォルダ項目ダブルクリック: {item.text()}")
     
     def _on_image_selected(self, image_path):
         """画像選択時の処理"""
@@ -289,8 +310,18 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
     
     def _toggle_image_maximize(self):
         """画像最大化切り替え（暫定）"""
-        print("画像最大化切り替え")
+        from utils.debug_logger import debug
+        debug("画像最大化切り替え")
     
     def _toggle_map_maximize(self):
         """マップ最大化切り替え（暫定）"""
-        print("マップ最大化切り替え")
+        from utils.debug_logger import debug
+        debug("マップ最大化切り替え")
+    
+    def load_folder(self, folder_path):
+        """フォルダを読み込み"""
+        if hasattr(self, 'folder_event_hdlr') and self.folder_event_hdlr:
+            self.folder_event_hdlr.load_folder(folder_path)
+        else:
+            from utils.debug_logger import warning
+            warning(f"フォルダイベントハンドラが見つかりません: {folder_path}")

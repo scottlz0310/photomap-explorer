@@ -7,6 +7,31 @@ from presentation.views.functional_main_window.refactored_main_window import Ref
 
 def setup_qt_environment():
     """Qt環境の設定"""
+    # QtWebEngine GPU問題の修正 - より強力な設定
+    os.environ['QTWEBENGINE_DISABLE_SANDBOX'] = '1'
+    os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = (
+        '--disable-gpu '
+        '--disable-software-rasterizer '
+        '--disable-dev-shm-usage '
+        '--no-sandbox '
+        '--disable-gpu-sandbox '
+        '--disable-extensions '
+        '--disable-background-networking '
+        '--disable-sync '
+        '--disable-translate '
+        '--disable-web-security '
+        '--use-gl=swiftshader '
+        '--single-process'
+    )
+    
+    # QtWebEngine初期化の前にOpenGLコンテキスト共有を設定
+    from PyQt5.QtCore import Qt, QCoreApplication
+    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+    
+    # OpenGL無効化設定
+    os.environ['QT_OPENGL'] = 'software'
+    os.environ['QT_QUICK_BACKEND'] = 'software'
+    
     # Get virtual environment path
     venv_path = os.path.dirname(os.path.dirname(sys.executable))
     
@@ -45,11 +70,8 @@ if __name__ == "__main__":
         set_debug_mode(True)
         debug("デバッグモードで起動中...")
     
-    # Setup Qt environment
+    # Setup Qt environment before creating QApplication
     setup_qt_environment()
-    
-    # Fix Qt WebEngine OpenGL context sharing warning
-    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
     
     app = QApplication(sys.argv)
     window = RefactoredFunctionalMainWindow()

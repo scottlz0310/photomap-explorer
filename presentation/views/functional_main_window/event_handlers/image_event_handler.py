@@ -35,48 +35,109 @@ class ImageEventHandler:
         self.preview_panel = preview_panel
         self.map_panel = map_panel
     
-    def on_image_selected(self, item):
+    def on_image_selected(self, item_or_path):
         """画像選択時の処理"""
         try:
+            logging.info(f"🔍 on_image_selected開始: {item_or_path}")
+            logging.info(f"🔍 item_or_path型: {type(item_or_path)}")
             image_path = None
             
-            # 複数の方法でパスを取得
-            if hasattr(item, 'data') and hasattr(item.data, '__call__'):
-                # Qt.UserRoleからパスを取得
-                try:
-                    image_path = item.data(Qt.UserRole)  # type: ignore
-                except:
-                    pass
-            
-            # ファイル名から完全パスを構築
-            if not image_path and hasattr(item, 'text'):
-                filename = item.text()
-                if hasattr(self.main_window, 'current_folder') and self.main_window.current_folder and filename:
-                    image_path = os.path.join(self.main_window.current_folder, filename)
-            
-            # 直接テキストからパスを取得
-            if not image_path and hasattr(item, 'text'):
-                text = item.text()
-                if text and os.path.exists(text):
-                    image_path = text
+            # 文字列パスが直接渡された場合
+            if isinstance(item_or_path, str):
+                logging.info(f"🔍 文字列パス検出: {item_or_path}")
+                if os.path.exists(item_or_path):
+                    image_path = item_or_path
+                    logging.info(f"🔍 文字列パス有効: {image_path}")
+                else:
+                    logging.warning(f"🔍 文字列パス無効: {item_or_path}")
+            else:
+                # QListWidgetItemが渡された場合の従来の処理
+                logging.info(f"🔍 QListWidgetItem検出: {item_or_path}")
+                item = item_or_path
+                
+                # 複数の方法でパスを取得
+                if hasattr(item, 'data') and hasattr(item.data, '__call__'):
+                    # Qt.UserRoleからパスを取得
+                    try:
+                        image_path = item.data(Qt.UserRole)  # type: ignore
+                    except:
+                        pass
+                
+                # ファイル名から完全パスを構築
+                if not image_path and hasattr(item, 'text'):
+                    filename = item.text()
+                    if hasattr(self.main_window, 'current_folder') and self.main_window.current_folder and filename:
+                        image_path = os.path.join(self.main_window.current_folder, filename)
+                
+                # 直接テキストからパスを取得
+                if not image_path and hasattr(item, 'text'):
+                    text = item.text()
+                    if text and os.path.exists(text):
+                        image_path = text
             
             # パスが取得できた場合の処理
             if image_path and os.path.exists(image_path):
+                logging.info(f"🔍 画像パス確定: {image_path}")
                 self.selected_image = image_path
+                logging.info(f"🔍 display_image呼び出し直前")
                 self.display_image(image_path)
+                logging.info(f"🔍 display_image呼び出し完了")
                 self.main_window.show_status_message(f"🖼️ 画像選択: {os.path.basename(image_path)}")
             else:
-                self.main_window.show_status_message(f"❌ 画像パスが取得できません: {item}")
+                logging.warning(f"🔍 画像パス取得失敗: {item_or_path}")
+                logging.warning(f"🔍 image_path値: {image_path}")
+                logging.warning(f"🔍 os.path.exists結果: {os.path.exists(image_path) if image_path else 'image_path is None'}")
+                self.main_window.show_status_message(f"❌ 画像パスが取得できません: {item_or_path}")
                 
         except Exception as e:
+            logging.error(f"🔍 on_image_selected例外: {e}")
+            import traceback
+            logging.error(f"🔍 on_image_selectedトレースバック: {traceback.format_exc()}")
             self.main_window.show_status_message(f"❌ 画像選択エラー: {e}")
             logging.error(f"画像選択詳細エラー: {e}")
     
     def display_image(self, image_path):
         """画像表示"""
         try:
+            logging.info(f"🔍 display_image開始: {image_path}")
+            
+            # 右パネルを表示（画像選択時に表示）
+            logging.info("🔍 右パネル表示処理開始")
+            if hasattr(self.main_window, 'right_panel_mgr') and self.main_window.right_panel_mgr:
+                if hasattr(self.main_window.right_panel_mgr, 'panel') and self.main_window.right_panel_mgr.panel:
+                    self.main_window.right_panel_mgr.panel.show()
+                    logging.info("🔍 右パネル表示完了")
+                if hasattr(self.main_window.right_panel_mgr, 'right_splitter') and self.main_window.right_panel_mgr.right_splitter:
+                    splitter = self.main_window.right_panel_mgr.right_splitter
+                    splitter.show()
+                    logging.info("🔍 右スプリッター表示完了")
+                    
+                    # スプリッターの詳細状態確認
+                    sizes = splitter.sizes()
+                    logging.info(f"🔍 スプリッターサイズ配分: {sizes}")
+                    logging.info(f"🔍 スプリッター子要素数: {splitter.count()}")
+                    
+                    # 子要素の表示状態確認
+                    for i in range(splitter.count()):
+                        widget = splitter.widget(i)
+                        if widget:
+                            logging.info(f"🔍 子要素{i}: 型={type(widget).__name__}, 可視={widget.isVisible()}, サイズ={widget.size().width()}x{widget.size().height()}")
+                            # 地図関連ウィジェットの詳細確認
+                            if hasattr(widget, 'windowTitle') and 'マップ' in str(widget.windowTitle()):
+                                logging.info(f"🔍 地図グループ発見: {widget}")
+            
+            # メインウィンドウの右パネル直接参照も確認
+            if hasattr(self.main_window, 'right_panel') and self.main_window.right_panel:
+                self.main_window.right_panel.show()
+                logging.info("🔍 メイン右パネル表示完了")
+            if hasattr(self.main_window, 'right_splitter') and self.main_window.right_splitter:
+                self.main_window.right_splitter.show()
+                logging.info("🔍 メイン右スプリッター表示完了")
+            logging.info("🔍 右パネル表示処理完了")
+            
             # プレビュー表示
             if self.preview_panel:
+                logging.info("🔍 プレビューパネル表示処理開始")
                 pixmap = QPixmap(image_path)
                 if not pixmap.isNull():
                     if hasattr(self.preview_panel, 'set_image'):
@@ -91,18 +152,26 @@ class ImageEventHandler:
                         self.preview_panel.update_image(image_path)
                     
                     self.main_window.show_status_message(f"🖼️ プレビュー表示成功: {os.path.basename(image_path)}")
+                    logging.info("🔍 プレビューパネル表示処理完了")
                 else:
                     self.main_window.show_status_message("❌ 画像読み込み失敗")
+                    logging.error("🔍 画像読み込み失敗")
             
             # 詳細情報表示
+            logging.info("🔍 update_image_status呼び出し開始")
             self.update_image_status(image_path)
+            logging.info("🔍 update_image_status呼び出し完了")
             
             # GPS情報取得してマップ表示
+            logging.info("🔍 update_map呼び出し開始")
             self.update_map(image_path)
+            logging.info("🔍 update_map呼び出し完了")
             
         except Exception as e:
             self.main_window.show_status_message(f"❌ 画像表示エラー: {e}")
             logging.error(f"画像表示詳細エラー: {e}")
+            import traceback
+            logging.error(f"🔍 display_imageトレースバック: {traceback.format_exc()}")
     
     def update_image_status(self, image_path):
         """画像のステータス情報を更新"""
@@ -141,7 +210,25 @@ class ImageEventHandler:
         try:
             if not self.map_panel:
                 self.main_window.show_status_message("📍 マップパネルが利用できません")
+                logging.warning("MapPanel is None")
                 return
+            
+            # デバッグ: MapPanelの型確認
+            logging.info(f"🔍 MapPanel type: {type(self.map_panel).__name__}")
+            logging.info(f"🔍 MapPanel has update_location: {hasattr(self.map_panel, 'update_location')}")
+            logging.info(f"🔍 MapPanel has view: {hasattr(self.map_panel, 'view')}")
+            
+            # 地図パネルを強制表示
+            if hasattr(self.map_panel, 'show'):
+                self.map_panel.show()
+                logging.info("🔍 地図パネル強制表示完了")
+            
+            # 地図パネルの親（地図グループ）も強制表示
+            if hasattr(self.map_panel, 'parent') and self.map_panel.parent():
+                parent = self.map_panel.parent()
+                if hasattr(parent, 'show'):
+                    parent.show()
+                    logging.info(f"🔍 地図親要素強制表示完了: {type(parent).__name__}")
             
             # GPS情報抽出
             from logic.image_utils import extract_gps_coords
@@ -149,21 +236,49 @@ class ImageEventHandler:
             
             if gps_info and "latitude" in gps_info and "longitude" in gps_info:
                 lat, lon = gps_info["latitude"], gps_info["longitude"]
+                logging.info(f"🔍 GPS extracted: {lat:.6f}, {lon:.6f}")
                 
                 # マップ更新
                 if hasattr(self.map_panel, 'update_location'):
+                    logging.info("🔍 Calling map_panel.update_location()")
                     success = self.map_panel.update_location(lat, lon)
+                    logging.info(f"🔍 update_location result: {success}")
+                    
                     if success:
                         self.main_window.show_status_message(f"📍 マップ表示: {lat:.6f}, {lon:.6f}")
+                        logging.info("✅ Map updated successfully")
+                        
+                        # 地図更新後に追加の強制表示処理
+                        from PyQt5.QtCore import QTimer
+                        def force_map_visibility():
+                            try:
+                                if self.map_panel and hasattr(self.map_panel, 'view') and self.map_panel.view:
+                                    view = self.map_panel.view
+                                    if hasattr(view, 'show'):
+                                        view.show()
+                                    if hasattr(view, 'setVisible'):
+                                        view.setVisible(True)
+                                    if hasattr(view, 'raise_'):
+                                        view.raise_()
+                                    logging.info("🔍 地図ビュー追加強制表示完了")
+                            except Exception as e:
+                                logging.warning(f"地図ビュー強制表示エラー: {e}")
+                        
+                        # 300ms後に強制表示
+                        QTimer.singleShot(300, force_map_visibility)
                     else:
                         self.main_window.show_status_message("📍 マップ更新に失敗")
+                        logging.error("❌ Map update failed")
                 elif hasattr(self.map_panel, 'view'):
+                    logging.info("🔍 Using fallback GPS HTML display")
                     # HTMLベースのマップ表示
                     self._show_gps_html(lat, lon, image_path)
                     self.main_window.show_status_message(f"📍 GPS表示: {lat:.6f}, {lon:.6f}")
                 else:
+                    logging.error("🔍 No map display method available")
                     self.main_window.show_status_message("📍 マップ機能が利用できません")
             else:
+                logging.info("🔍 No GPS info found in image")
                 # GPS情報なしの場合
                 if hasattr(self.map_panel, 'view'):
                     self._show_no_gps_html()
@@ -172,6 +287,8 @@ class ImageEventHandler:
         except Exception as e:
             self.main_window.show_status_message(f"❌ マップ更新エラー: {e}")
             logging.error(f"マップ更新詳細エラー: {e}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
     
     def _show_gps_html(self, lat, lon, image_path):
         """GPS情報のHTML表示"""

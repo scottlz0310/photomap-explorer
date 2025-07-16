@@ -8,7 +8,7 @@ def load_pixmap(image_path):
     """画像パスからQPixmapを生成して返すユーティリティ関数"""
     return QPixmap(image_path)
 
-def create_thumbnail_list(thumbnail_clicked_callback):
+def create_thumbnail_list(thumbnail_clicked_callback=None):
     """サムネイル一覧のウィジェットを作成して初期化する関数"""
     thumbnail_list = QListWidget()
     thumbnail_list.setIconSize(QSize(128, 128))  # サムネイルサイズを設定
@@ -18,7 +18,10 @@ def create_thumbnail_list(thumbnail_clicked_callback):
     thumbnail_list.setSpacing(8)  # アイコン間隔を調整
     thumbnail_list.setWordWrap(True)  # テキスト折り返し有効
     thumbnail_list.setUniformItemSizes(True)  # パフォーマンス向上
-    thumbnail_list.itemClicked.connect(thumbnail_clicked_callback)  # クリック時のコールバックを接続
+    
+    # コールバック接続は外部で行うように変更（後からset_event_handlersで設定）
+    # これにより、適切なイベントハンドラーの上書きが可能になる
+    info("🔍 create_thumbnail_list: コールバック接続を外部に委譲")
 
     return thumbnail_list
 

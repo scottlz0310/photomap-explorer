@@ -82,7 +82,10 @@ class PhotoMapLogger:
             self._logger.addHandler(file_handler)
             
         except Exception as e:
-            print(f"ファイルログ設定エラー: {e}")
+            # ここは初期化時なのでロガーが使えない可能性があるため
+            # 最小限のprintのみ使用
+            import sys
+            print(f"ファイルログ設定エラー: {e}", file=sys.stderr)
     
     def set_debug_mode(self, enabled: bool = True):
         """デバッグモードの設定"""
@@ -102,32 +105,37 @@ class PhotoMapLogger:
     
     def log(self, level: int, message: str, *args, **kwargs):
         """基本ログ出力"""
-        self._logger.log(level, message, *args, **kwargs)
+        if self._logger:
+            self._logger.log(level, message, *args, **kwargs)
     
     def debug(self, message: str, *args, **kwargs):
         """デバッグメッセージ"""
-        if self._debug_mode:
+        if self._debug_mode and self._logger:
             self._logger.debug(f"🐛 {message}", *args, **kwargs)
     
     def info(self, message: str, *args, **kwargs):
         """情報メッセージ"""
-        self._logger.info(f"ℹ️ {message}", *args, **kwargs)
+        if self._logger:
+            self._logger.info(f"ℹ️ {message}", *args, **kwargs)
     
     def warning(self, message: str, *args, **kwargs):
         """警告メッセージ"""
-        self._logger.warning(f"⚠️ {message}", *args, **kwargs)
+        if self._logger:
+            self._logger.warning(f"⚠️ {message}", *args, **kwargs)
     
     def error(self, message: str, *args, **kwargs):
         """エラーメッセージ"""
-        self._logger.error(f"❌ {message}", *args, **kwargs)
+        if self._logger:
+            self._logger.error(f"❌ {message}", *args, **kwargs)
     
     def critical(self, message: str, *args, **kwargs):
         """重大エラーメッセージ"""
-        self._logger.critical(f"🔥 {message}", *args, **kwargs)
+        if self._logger:
+            self._logger.critical(f"🔥 {message}", *args, **kwargs)
     
     def verbose(self, message: str, *args, **kwargs):
         """詳細メッセージ（デバッグモード時のみ）"""
-        if self._debug_mode:
+        if self._debug_mode and self._logger:
             self._logger.debug(f"📋 VERBOSE: {message}", *args, **kwargs)
 
 # グローバルロガーインスタンス

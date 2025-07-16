@@ -61,8 +61,17 @@ class RightPanelManager:
             
             # スプリッターサイズ調整
             info("スプリッターサイズ調整中...")
+            # プレビュー:マップ = 1:1の比率で設定、最小サイズも確保
             self.right_splitter.setSizes([400, 400])
             debug(f"右スプリッターサイズ設定後: サイズ配分={self.right_splitter.sizes()}, 子要素数={self.right_splitter.count()}")
+            
+            # 地図パネルの最小サイズを強制設定
+            if self.map_group:
+                self.map_group.setMinimumHeight(300)
+                debug(f"地図グループ最小サイズ設定: {self.map_group.minimumHeight()}px")
+            if hasattr(self, 'map_panel') and self.map_panel:
+                self.map_panel.setMinimumHeight(250)
+                debug(f"地図パネル最小サイズ設定: {self.map_panel.minimumHeight()}px")
             
             # テーマコンポーネント登録
             info("右パネルテーマコンポーネント登録中...")

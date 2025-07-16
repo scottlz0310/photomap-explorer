@@ -114,23 +114,8 @@ class LeftPanelManager:
         
         try:
             from ui.thumbnail_list import create_thumbnail_list
-            # ダミーのコールバック関数を定義（後で設定される）
-            def thumbnail_placeholder_callback(item):
-                from utils.debug_logger import info
-                if item and hasattr(item, 'text'):
-                    filename = item.text()
-                    info(f"サムネイルクリック: {filename}")
-                    
-                    # ファイルパスを取得
-                    if hasattr(item, 'data'):
-                        image_path = item.data(Qt.ItemDataRole.UserRole)
-                        if image_path:
-                            # 画像をプレビューパネルに表示
-                            self._show_image_in_preview(image_path)
-                            # EXIF情報も更新
-                            self._show_image_info(image_path)
-            
-            self.thumbnail_list = create_thumbnail_list(thumbnail_placeholder_callback)
+            # サムネイルリストを作成（コールバックは後で set_event_handlers で設定）
+            self.thumbnail_list = create_thumbnail_list()  # コールバック引数を削除
             self.thumbnail_layout.addWidget(self.thumbnail_list)
             from utils.debug_logger import info
             info("サムネイルリスト作成成功")
@@ -178,23 +163,78 @@ class LeftPanelManager:
     
     def set_event_handlers(self, folder_item_clicked, folder_item_double_clicked, image_selected):
         """イベントハンドラを設定"""
-        if self.folder_content_list:
+        if self.folder_content_list is not None:
             self.folder_content_list.itemClicked.connect(folder_item_clicked)
             self.folder_content_list.itemDoubleClicked.connect(folder_item_double_clicked)
         
-        if self.thumbnail_list:
+        from utils.debug_logger import info, error
+        info(f"🔍 サムネイルリスト状態チェック: self.thumbnail_list={self.thumbnail_list}")
+        info(f"🔍 サムネイルリスト型: {type(self.thumbnail_list)}")
+        info(f"🔍 サムネイルリストNone確認: {self.thumbnail_list is None}")
+        
+        if self.thumbnail_list is not None:
+            # 既存の接続をすべて切断（より確実に）
+            try:
+                # 全ての接続を確実に切断
+                self.thumbnail_list.itemClicked.disconnect()
+                from utils.debug_logger import info
+                info("🔍 既存のサムネイル接続を切断しました")
+            except TypeError:
+                # 接続がない場合はTypeErrorが発生
+                from utils.debug_logger import info
+                info("🔍 サムネイル接続がありませんでした（正常）")
+            except Exception as e:
+                from utils.debug_logger import warning
+                warning(f"🔍 接続切断エラー: {e}")
+            
             # サムネイルクリック時の処理
             def thumbnail_item_clicked(item):
                 from utils.debug_logger import debug, info
+                info(f"🔍 thumbnail_item_clicked開始: {item}")
                 if item:
                     image_path = item.data(Qt.ItemDataRole.UserRole)
+                    info(f"🔍 取得したimage_path: {image_path}")
                     if image_path:
                         debug(f"サムネイルクリック: {image_path}")
+                        info(f"🔍 image_selected呼び出し開始: {image_selected}")
                         image_selected(image_path)
+                        info(f"🔍 image_selected呼び出し完了")
                     else:
                         debug("サムネイルアイテムからパスを取得できませんでした")
+                else:
+                    info("🔍 thumbnail_item_clicked: itemがNone")
             
+            # 新しい接続を設定
             self.thumbnail_list.itemClicked.connect(thumbnail_item_clicked)
+            from utils.debug_logger import info
+            info("🔍 新しいサムネイルイベントハンドラーを設定しました")
+        else:
+            from utils.debug_logger import error
+            error("🚨 サムネイルリストがNullまたは無効です - イベントハンドラーを設定できません")
+    
+    def _show_image_in_preview(self, image_path):
+        """画像をプレビューパネルに表示"""
+        try:
+            from utils.debug_logger import debug, info, error
+            debug(f"プレビュー表示要求: {image_path}")
+            
+            if not image_path or not os.path.exists(image_path):
+                error(f"無効な画像パス: {image_path}")
+                return
+                
+            # メインウィンドウのプレビューパネルを使用
+            if hasattr(self.main_window, 'preview_panel') and self.main_window.preview_panel:
+                if hasattr(self.main_window.preview_panel, 'display_image'):
+                    self.main_window.preview_panel.display_image(image_path)
+                    info(f"プレビュー表示完了: {os.path.basename(image_path)}")
+                else:
+                    error("プレビューパネルにdisplay_imageメソッドがありません")
+            else:
+                error("プレビューパネルが見つかりません")
+                
+        except Exception as e:
+            from utils.debug_logger import error
+            error(f"画像プレビュー表示エラー: {e}")
     
     def update_folder_content(self, folder_path):
         """フォルダ内容を更新"""

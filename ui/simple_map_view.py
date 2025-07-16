@@ -8,6 +8,13 @@ QtWebEngineが利用できない環境でも動作する
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
+from utils.debug_logger import debug, info, warning, error, verbose
+
+# Qt定数の安全なインポート
+try:
+    ALIGN_CENTER = Qt.AlignCenter  # type: ignore
+except AttributeError:
+    ALIGN_CENTER = 0x0004  # フォールバック値
 
 
 class SimpleMapView(QWidget):
@@ -29,7 +36,8 @@ class SimpleMapView(QWidget):
         
         # メインラベル
         self.main_label = QLabel()
-        self.main_label.setAlignment(Qt.AlignCenter)
+        # 中央揃えを設定
+        self.main_label.setAlignment(ALIGN_CENTER)
         self.main_label.setWordWrap(True)
         
         # フォント設定

@@ -44,10 +44,11 @@ PhotoMap Explorer v2.2.0のリファクタリング完了に伴う**統合ドキ
 | **[DEPLOYMENT.md](./DEPLOYMENT.md)** | DevOps・リリース管理者 | デプロイメント手順 | ⭐⭐ |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | コントリビューター | 貢献ガイドライン | ⭐⭐ |
 
-### 🚨 **問題解決**
+### 🚨 **問題解決・デバッグ**
 
 | ドキュメント | 対象読者 | 内容 | 重要度 |
 |-------------|---------|------|---------|
+| **[DEBUG_GUIDELINES.md](./DEBUG_GUIDELINES.md)** | 開発者・デバッガー | デバッグ作業ガイドライン | ⭐⭐⭐ |
 | **[KNOWN_ISSUES.md](./KNOWN_ISSUES.md)** | 全ユーザー | 既知の問題と回避策 | ⭐⭐ |
 | **[BUG_REPORT_TEMPLATE.md](./BUG_REPORT_TEMPLATE.md)** | バグ報告者 | バグ報告テンプレート | ⭐ |
 
@@ -63,8 +64,9 @@ PhotoMap Explorer v2.2.0のリファクタリング完了に伴う**統合ドキ
 ### 👨‍💻 **開発者**
 1. **[DEVELOPER_GUIDE_v2.2.0.md](./DEVELOPER_GUIDE_v2.2.0.md)** - 開発環境構築
 2. **[ARCHITECTURE_v2.2.0.md](./ARCHITECTURE_v2.2.0.md)** - アーキテクチャ理解
-3. **[REFACTORING_COMPLETION_REPORT.md](./REFACTORING_COMPLETION_REPORT.md)** - リファクタリング内容把握
-4. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - 貢献方法確認
+3. **[DEBUG_GUIDELINES.md](./DEBUG_GUIDELINES.md)** - デバッグ作業ガイドライン
+4. **[REFACTORING_COMPLETION_REPORT.md](./REFACTORING_COMPLETION_REPORT.md)** - リファクタリング内容把握
+5. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - 貢献方法確認
 
 ### 🏗️ **アーキテクト・テクニカルリーダー**
 1. **[ARCHITECTURE_v2.2.0.md](./ARCHITECTURE_v2.2.0.md)** - 設計思想・構造

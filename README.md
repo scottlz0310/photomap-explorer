@@ -122,6 +122,47 @@ python main.py
 
 ---
 
+## 🛠️ 開発・デバッグ
+
+### ロガーと起動オプション
+
+PhotoMap Explorerは高機能ロガーを搭載しており、デバッグレベルを起動時に指定できます：
+
+```bash
+# すべてのログを出力（DEBUG以上）
+python main.py --debug
+
+# 情報以上のログを出力（INFO以上）
+python main.py --verbose
+
+# オプション指定なし（WARNING以上のみ）
+python main.py
+```
+
+### デバッグ・テスト作業
+
+デバッグ作業は整理されたディレクトリ構造で行います：
+
+```
+photomap-explorer/
+├── test/                   # テストスクリプト
+│   ├── integration/       # 結合テスト
+│   └── manual/           # 手動テスト
+├── debug/                 # デバッグスクリプト
+│   └── debug_template.py  # デバッグテンプレート
+└── logs/                  # ログファイル
+```
+
+**デバッグ作業の鉄則**:
+- print文禁止、ロガーのみ使用
+- デバッグスクリプトは `debug/` に配置
+- テストスクリプトは `test/` に配置
+- 責任範囲を明確化し、上位モジュールの肥大化を避ける
+
+詳細は [docs/DEBUG_GUIDELINES.md](docs/DEBUG_GUIDELINES.md) を参照してください。
+
+---
+
 ## 📁 ディレクトリ構成（分割後）
 
 ```
@@ -147,6 +188,7 @@ photomap-explorer/
 │   ├── pme.ico              #  アプリ用アイコン
 │   └── ...                  #  その他アセット
 ├── docs/                    #  ドキュメント類
+│   ├── DEBUG_GUIDELINES.md  #  🚨 デバッグ作業ガイドライン
 │   ├── architecture.md      #  アーキテクチャ概要
 │   ├── CONTRIBUTING.md      #  コントリビュートガイド
 │   ├── Pending_features.md  #  開発予定・ToDo

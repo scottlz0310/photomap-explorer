@@ -142,3 +142,29 @@ class LeftPanelManager:
         """ステータス情報をクリア"""
         if self.status_info:
             self.status_info.setText("画像を選択すると詳細情報が表示されます")
+
+    def refresh_folder_content(self, folder_path=None):
+        """フォルダ内容を更新・リフレッシュ
+        
+        Args:
+            folder_path (str, optional): 更新するフォルダパス
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            if folder_path:
+                logger.info(f"フォルダ内容更新: {folder_path}")
+                self.update_folder_content(folder_path)
+            else:
+                logger.info("フォルダ内容リフレッシュ")
+                # 現在のフォルダ内容をリフレッシュ
+                if hasattr(self.main_window, 'current_folder') and self.main_window.current_folder:
+                    self.update_folder_content(self.main_window.current_folder)
+                    
+            # ステータス更新
+            self.main_window.show_status_message("📁 フォルダ内容を更新しました")
+            
+        except Exception as e:
+            logger.error(f"フォルダ内容更新エラー: {e}")
+            self.main_window.show_status_message(f"❌ フォルダ内容更新エラー: {e}")

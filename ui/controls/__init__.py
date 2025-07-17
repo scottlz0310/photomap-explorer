@@ -253,19 +253,35 @@ def create_controls(on_address_changed_callback=None, on_parent_button_callback=
     Returns:
         tuple: (controls_widget, address_bar, parent_button)
     """
+    from PyQt5.QtWidgets import QPushButton, QWidget, QHBoxLayout
+    from PyQt5.QtGui import QFont
+    
     # 統合アドレスバーを作成
-    controls_container = IntegratedAddressBar()
+    address_bar = IntegratedAddressBar()
     
     # コールバック設定
     if on_address_changed_callback:
-        controls_container.path_changed.connect(on_address_changed_callback)
+        address_bar.path_changed.connect(on_address_changed_callback)
     
-    # 親ボタンの参照を取得（統合アドレスバー内のツールバーから）
-    parent_button = None
-    toolbar = controls_container.get_toolbar()
-    if toolbar and hasattr(toolbar, 'parent_button'):
-        parent_button = toolbar.parent_button
-        if on_parent_button_callback and parent_button:
-            parent_button.clicked.connect(on_parent_button_callback)
+    # 親フォルダに戻るボタンを作成（元の設計に従う）
+    parent_button = QPushButton("⬆️")
+    parent_button.setFixedSize(38, 30)
+    parent_button.setToolTip("親フォルダへ移動")
     
-    return controls_container, controls_container, parent_button
+    if on_parent_button_callback:
+        parent_button.clicked.connect(on_parent_button_callback)
+    
+    # 親フォルダボタンのフォント設定
+    parent_font = QFont()
+    parent_font.setPointSize(12)
+    parent_button.setFont(parent_font)
+
+    # レイアウト作成（元の設計に従う）
+    controls_widget = QWidget()
+    layout = QHBoxLayout(controls_widget)
+    layout.addWidget(address_bar, 1)  # 拡張可能
+    layout.addWidget(parent_button)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(5)
+    
+    return controls_widget, address_bar, parent_button

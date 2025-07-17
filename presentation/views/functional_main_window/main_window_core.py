@@ -5,8 +5,9 @@ Main Window Core
 """
 
 import os
+import logging
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSplitter, QHBoxLayout, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 # コントロールのインポート  
@@ -24,8 +25,24 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     """
     
     def __init__(self):
-        QMainWindow.__init__(self)
-        ThemeAwareMixin.__init__(self)
+        super().__init__()  # QMainWindow の初期化
+        
+        # テーマ関連属性を手動で初期化（ThemeAwareMixin の属性）
+        from presentation.themes.core.theme_engine import ThemeEngine
+        self.theme_engine = ThemeEngine()
+        self.theme_components = []
+        
+        # ログの設定
+        logger = logging.getLogger(__name__)
+        logger.debug("MainWindowCore 初期化開始")
+        
+        # テーマ変更シグナルに接続
+        try:
+            self.theme_engine.theme_changed.connect(self.on_theme_changed)
+        except Exception as e:
+            logger.warning(f"テーマシグナル接続失敗: {e}")
+        
+        logger.debug("MainWindowCore 初期化完了")
         
         # ウィンドウ基本設定
         self.setWindowTitle("PhotoMap Explorer - 新UI (Clean Architecture) v2.2.0")
@@ -84,7 +101,7 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self._setup_toolbar_area()
         
         # メインスプリッターの準備
-        self.main_splitter = QSplitter(Qt.Horizontal)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_layout.addWidget(self.main_splitter)
         
         # 最大化コンテナの準備
@@ -106,13 +123,10 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         self.folder_btn.setMaximumHeight(30)
         toolbar_layout.addWidget(self.folder_btn)
         
-        # アドレスバーエリア（詳細は後で設定）
-        def dummy_callback(*args, **kwargs):
-            pass  # 暫定的なダミーコールバック
-        
+        # アドレスバーエリア（イベントハンドラを適切に設定）
         self.controls_widget, self.address_bar, self.parent_button = create_controls(
-            dummy_callback,  # 暫定コールバック
-            dummy_callback   # 暫定コールバック
+            self._on_address_changed,  # アドレス変更時のコールバック
+            self._on_parent_button_clicked   # 親フォルダボタンクリック時のコールバック
         )
         self.controls_widget.setMaximumHeight(35)
         toolbar_layout.addWidget(self.controls_widget, 1)
@@ -167,19 +181,39 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     
     def _setup_manager_references(self):
         """管理クラス間の参照を設定"""
+        logger = logging.getLogger(__name__)
+        logger.debug("=== _setup_manager_references開始 ===")
+        
         # 左パネル作成
-        if self.left_panel_manager and self.main_splitter:
+        logger.debug(f"left_panel_manager: {self.left_panel_manager}")
+        logger.debug(f"main_splitter: {self.main_splitter}")
+        
+        if self.left_panel_manager is not None and self.main_splitter is not None:
+            logger.debug("左パネル作成開始")
             left_panel = self.left_panel_manager.create_panel()
+            logger.debug(f"左パネル作成完了: {left_panel}")
             self.main_splitter.addWidget(left_panel)
+            logger.debug("左パネルをスプリッターに追加完了")
+        else:
+            logger.warning(f"左パネル作成スキップ - left_panel_manager: {self.left_panel_manager is not None}, main_splitter: {self.main_splitter is not None}")
         
         # 右パネル作成
-        if self.right_panel_manager and self.main_splitter:
+        if self.right_panel_manager is not None and self.main_splitter is not None:
+            logger.debug("右パネル作成開始")
             right_panel = self.right_panel_manager.create_panel()
+            logger.debug(f"右パネル作成完了: {right_panel}")
             self.main_splitter.addWidget(right_panel)
+            logger.debug("右パネルをスプリッターに追加完了")
+        else:
+            logger.warning(f"右パネル作成スキップ - right_panel_manager: {self.right_panel_manager is not None}, main_splitter: {self.main_splitter is not None}")
         
         # スプリッターサイズ調整
-        if self.main_splitter:
+        if self.main_splitter is not None:
+            logger.debug(f"スプリッター子要素数（設定前）: {self.main_splitter.count()}")
             self.main_splitter.setSizes([600, 800])
+            logger.debug(f"スプリッター子要素数（設定後）: {self.main_splitter.count()}")
+        
+        logger.debug("=== _setup_manager_references完了 ===")
     
     def _connect_event_handlers(self):
         """イベントハンドラの接続"""
@@ -193,11 +227,12 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         
         # アドレスバー関連
         if self.address_bar_manager and self.folder_event_handler:
-            # アドレスバーのコールバックを設定
-            self.address_bar_manager.set_callbacks(
-                self.folder_event_handler.on_address_changed,
-                self.folder_event_handler.go_to_parent_folder
-            )
+            # アドレスバーマネージャーのコンポーネント設定
+            if hasattr(self, 'address_bar'):
+                self.address_bar_manager.set_components(
+                    self.address_bar, 
+                    self.folder_event_handler
+                )
     
     def show_status_message(self, message, timeout=0):
         """ステータスバーにメッセージを表示"""
@@ -234,5 +269,91 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
     
     def _apply_delayed_theme(self):
         """遅延テーマ適用"""
+        logger = logging.getLogger(__name__)
         if self.address_bar_manager:
-            self.address_bar_manager.apply_delayed_theme()
+            # AddressBarManagerに遅延テーマ適用メソッドがない場合はスキップ
+            if hasattr(self.address_bar_manager, 'apply_delayed_theme'):
+                self.address_bar_manager.apply_delayed_theme()
+            else:
+                logger.debug("AddressBarManager: apply_delayed_theme メソッドなし（スキップ）")
+    
+    # テーマ関連メソッド（ThemeAwareMixin からの機能）
+    def register_theme_component(self, widget, component_type="widget"):
+        """テーマコンポーネントを登録"""
+        logger = logging.getLogger(__name__)
+        try:
+            self.theme_components.append((widget, component_type))
+            logger.debug(f"テーマコンポーネント登録: {widget.__class__.__name__} - {component_type}")
+        except Exception as e:
+            logger.error(f"テーマコンポーネント登録エラー: {e}")
+    
+    def apply_theme(self):
+        """テーマを適用"""
+        logger = logging.getLogger(__name__)
+        try:
+            current_theme = self.theme_engine.get_current_theme()
+            self._apply_custom_theme(current_theme)
+            logger.debug("テーマ適用完了")
+        except Exception as e:
+            logger.error(f"テーマ適用エラー: {e}")
+    
+    def _apply_custom_theme(self, theme):
+        """カスタムテーマ適用（サブクラスでオーバーライド）"""
+        pass
+    
+    def on_theme_changed(self, theme_name):
+        """テーマ変更時のハンドラ"""
+        logger = logging.getLogger(__name__)
+        logger.debug(f"テーマ変更: {theme_name}")
+        self.apply_theme()
+    
+    def get_theme_color(self, color_key):
+        """テーマカラーを取得"""
+        try:
+            return self.theme_engine.get_color(color_key)
+        except Exception as e:
+            logging.getLogger(__name__).error(f"テーマカラー取得エラー: {e}")
+            return "#000000"  # デフォルト色
+    
+    def get_theme_style(self, style_key):
+        """テーマスタイルを取得"""
+        try:
+            return self.theme_engine.get_style(style_key)
+        except Exception as e:
+            logging.getLogger(__name__).error(f"テーマスタイル取得エラー: {e}")
+            return ""  # デフォルトスタイル
+    
+    # イベントハンドラメソッド（管理クラス連携実装）
+    def _on_address_changed(self, new_path):
+        """アドレスバーでパスが変更された時の処理"""
+        logger = logging.getLogger(__name__)
+        try:
+            logger.debug(f"アドレス変更: {new_path}")
+            
+            # フォルダイベントハンドラがあれば委譲
+            if self.folder_event_handler:
+                self.folder_event_handler.on_address_changed(new_path)
+            else:
+                # 直接処理（フォルダハンドラ未設定時のフォールバック）
+                logger.info(f"新しいパス: {new_path}")
+                self.show_status_message(f"パス変更: {new_path}")
+                
+        except Exception as e:
+            logger.error(f"アドレス変更処理エラー: {e}")
+    
+    def _on_parent_button_clicked(self):
+        """親フォルダボタンがクリックされた時の処理"""
+        logger = logging.getLogger(__name__)
+        try:
+            logger.debug("親フォルダボタンクリック")
+            
+            # フォルダイベントハンドラがあれば委譲
+            if self.folder_event_handler:
+                self.folder_event_handler.go_to_parent_folder()
+            else:
+                # 直接処理（フォルダハンドラ未設定時のフォールバック）
+                logger.info("親フォルダへ移動")
+                self.show_status_message("親フォルダへ移動")
+                
+        except Exception as e:
+            logger.error(f"親フォルダボタン処理エラー: {e}")

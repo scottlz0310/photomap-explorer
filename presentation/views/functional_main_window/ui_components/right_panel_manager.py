@@ -44,8 +44,9 @@ class RightPanelManager:
         # マップパネル
         self._create_map_panel()
         
-        # スプリッターサイズ調整
-        self.right_splitter.setSizes([400, 400])
+        # スプリッターサイズ調整（SVGファイルのレイアウトに合わせて）
+        # 地図表示エリア（上）: 画像プレビューエリア（下） = 3:2 の比率
+        self.right_splitter.setSizes([480, 320])  # 初期値：上480px, 下320px
         
         # テーマコンポーネント登録
         self._register_theme_components()

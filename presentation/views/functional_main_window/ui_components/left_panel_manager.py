@@ -57,7 +57,8 @@ class LeftPanelManager:
         
         # フォルダ内容リスト
         self.folder_content_list = QListWidget()
-        self.folder_content_list.setMinimumHeight(150)
+        self.folder_content_list.setMinimumHeight(120)  # SVGレイアウトに合わせて調整
+        self.folder_content_list.setMaximumHeight(180)  # 最大高さを設定
         
         logger.debug(f"フォルダ内容リスト作成: {self.folder_content_list}")
         
@@ -80,6 +81,7 @@ class LeftPanelManager:
         try:
             from ui.thumbnail_list import create_thumbnail_list
             self.thumbnail_list = create_thumbnail_list(None)  # コールバックは後で設定
+            self.thumbnail_list.setMinimumHeight(200)  # SVGレイアウトに合わせて調整
             self.thumbnail_layout.addWidget(self.thumbnail_list)
         except Exception as e:
             error_label = QLabel(f"サムネイルエラー: {e}")
@@ -101,8 +103,8 @@ class LeftPanelManager:
         # ステータス表示ラベル
         self.status_info = QLabel("画像を選択すると詳細情報が表示されます")
         self.status_info.setWordWrap(True)
-        self.status_info.setMinimumHeight(120)
-        self.status_info.setMaximumHeight(180)
+        self.status_info.setMinimumHeight(100)  # SVGレイアウトに合わせて調整
+        self.status_info.setMaximumHeight(150)  # 最大高さを調整
         
         status_layout.addWidget(self.status_info)
         layout.addWidget(self.status_group)

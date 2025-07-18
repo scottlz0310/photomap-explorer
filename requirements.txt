@@ -3,6 +3,7 @@ PyQt5>=5.15.0
 PyQtWebEngine>=5.15.0
 folium>=0.12.1
 exifread>=3.3.1
+Pillow>=9.0.0
 
 # Build and packaging dependencies (optional)
 pyinstaller>=5.0; platform_system=="Windows"

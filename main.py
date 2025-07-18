@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import QApplication
-from presentation.views.functional_main_window.refactored_main_window import RefactoredFunctionalMainWindow
+from presentation.views.modern_main_window import ModernMainWindow
 
 def setup_logging(debug=False, verbose=False):
     """
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         logger.info("QApplicationインスタンス作成完了")
         
-        window = RefactoredFunctionalMainWindow()
+        window = ModernMainWindow()
         logger.info("メインウィンドウ作成完了")
         
         window.show()

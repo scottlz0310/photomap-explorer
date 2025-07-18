@@ -45,8 +45,8 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         logger.debug("MainWindowCore 初期化完了")
         
         # ウィンドウ基本設定
-        self.setWindowTitle("PhotoMap Explorer - 新UI (Clean Architecture) v2.2.0")
-        self.setGeometry(100, 100, 1400, 900)
+        self.setWindowTitle("PhotoMap Explorer v2.2.0")
+        self.setGeometry(100, 100, 1280, 960)  # SVGファイルのサイズに合わせて調整
         
         # 状態管理
         self.current_folder = None
@@ -260,12 +260,51 @@ class MainWindowCore(QMainWindow, ThemeAwareMixin):
         
         self.apply_theme()
         
+        # レイアウトの比率調整（SVGファイルのレイアウトに合わせて）
+        self._adjust_layout_proportions()
+        
         # アドレスバーの遅延テーマ適用
         from PyQt5.QtCore import QTimer
         QTimer.singleShot(100, self._apply_delayed_theme)
         
         # ステータス更新
         self.show_status_message("新UI (Clean Architecture) v2.2.0 で起動しました")
+    
+    def _adjust_layout_proportions(self):
+        """レイアウトの比率調整（SVGファイルのレイアウトに合わせる）"""
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # メインスプリッター（左右分割）の比率調整
+            if self.main_splitter:
+                # SVGファイルを参考に、左パネル:右パネル = 3:5 の比率に設定
+                total_width = self.width()
+                left_width = int(total_width * 0.375)  # 約38%
+                right_width = int(total_width * 0.625)  # 約62%
+                
+                self.main_splitter.setSizes([left_width, right_width])
+                logger.debug(f"メインスプリッター比率設定: 左{left_width}px, 右{right_width}px")
+            
+            # 右パネル内の上下分割比率調整
+            if self.right_splitter:
+                # SVGファイルを参考に、上:下 = 3:2 の比率に設定
+                total_height = self.height() - 100  # ツールバーとステータスバーを除いた高さ
+                top_height = int(total_height * 0.6)  # 約60%
+                bottom_height = int(total_height * 0.4)  # 約40%
+                
+                self.right_splitter.setSizes([top_height, bottom_height])
+                logger.debug(f"右パネルスプリッター比率設定: 上{top_height}px, 下{bottom_height}px")
+                
+        except Exception as e:
+            logger.error(f"レイアウト比率調整エラー: {e}")
+    
+    def resizeEvent(self, event):
+        """ウィンドウサイズ変更時のイベントハンドラ"""
+        super().resizeEvent(event)
+        
+        # リサイズ後にレイアウト比率を再調整
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(50, self._adjust_layout_proportions)
     
     def _apply_delayed_theme(self):
         """遅延テーマ適用"""

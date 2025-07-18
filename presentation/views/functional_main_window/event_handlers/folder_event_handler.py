@@ -83,6 +83,19 @@ class FolderEventHandler:
                 self.address_bar.setText("")
                 self.address_bar.setText(folder_path)
             
+            # AddressBarManagerがある場合は、そちらでも更新
+            logging.debug(f"=== フォルダイベントハンドラーでアドレスバー更新 ===")
+            logging.debug(f"hasattr(self.main_window, 'address_bar_manager'): {hasattr(self.main_window, 'address_bar_manager')}")
+            if hasattr(self.main_window, 'address_bar_manager'):
+                logging.debug(f"self.main_window.address_bar_manager: {self.main_window.address_bar_manager}")
+                if self.main_window.address_bar_manager:
+                    logging.debug(f"アドレスバーマネージャーのupdate_address_barを呼び出し: {folder_path}")
+                    self.main_window.address_bar_manager.update_address_bar(folder_path)
+                else:
+                    logging.warning("address_bar_managerがNoneです")
+            else:
+                logging.warning("main_windowにaddress_bar_manager属性がありません")
+            
             # 画像ファイル検索
             image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff'}
             image_files = []

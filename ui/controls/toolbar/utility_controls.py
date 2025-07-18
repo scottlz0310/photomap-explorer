@@ -440,7 +440,10 @@ class UtilityControls(QWidget, ThemeAwareMixin):
                 action.setCheckable(False)
             
             # 現在のモードに対応するアクションをチェック
-            # TODO: アクションとモードの対応付けを改善
+            # アクションとモードの対応付けを改善
+            for action, mode in zip(self.mode_actions, self.available_modes):
+                if hasattr(action, 'setChecked'):
+                    action.setChecked(mode == self.current_mode)
             
         except Exception as e:
             logging.error(f"表示モードメニュー更新エラー: {e}")

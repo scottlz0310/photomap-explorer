@@ -16,7 +16,7 @@ from .text_input_handler import TextInputHandler
 
 # 統合アドレスバークラス
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 import logging
 
 
@@ -35,6 +35,19 @@ class IntegratedAddressBar(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # 親ウィジェットの明示的な設定
+        if parent is not None:
+            self.setParent(parent)
+        
+        # ウィンドウフラグを明示的に設定（独立ウィンドウを防ぐ）
+        try:
+            # 独立ウィンドウフラグを削除
+            current_flags = self.windowFlags()
+            new_flags = current_flags & ~Qt.WindowType.Window  # type: ignore
+            self.setWindowFlags(new_flags)  # type: ignore
+        except Exception as e:
+            logging.warning(f"ウィンドウフラグ設定エラー: {e}")
         
         # コンポーネント初期化
         self.address_bar_core = AddressBarCore(self)

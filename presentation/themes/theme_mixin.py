@@ -49,15 +49,30 @@ class ThemeAwareMixin:
         return self.theme_engine.get_style(style_key)
 
 
-# ダミー関数（互換性のため）
+# 後方互換性のためのクラスと関数
 class ThemedWidget:
-    pass
+    """後方互換性のための空のクラス"""
+    def __init__(self):
+        pass
 
 def apply_theme_to_widget(widget, theme):
-    pass
+    """ウィジェットにテーマを適用（後方互換性）"""
+    try:
+        if hasattr(widget, 'setStyleSheet') and theme:
+            # 基本的なテーマ適用
+            if hasattr(theme, 'get_style'):
+                style = theme.get_style('default')
+                widget.setStyleSheet(style)
+    except Exception:
+        pass  # エラーを無視
 
 def get_themed_style(style_key):
-    return ""
+    """テーマスタイルを取得（後方互換性）"""
+    try:
+        # デフォルトスタイルを返す
+        return ""
+    except Exception:
+        return ""
 
 def get_themed_color(color_key):
     return "#000000"

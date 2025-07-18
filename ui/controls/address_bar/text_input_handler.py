@@ -78,8 +78,8 @@ class TextInputHandler(QObject):
             self.text_edit.setMaximumHeight(34)
             self.text_edit.setPlaceholderText("パスを入力してください...")
             
-            # 初期状態は非表示
-            self.text_edit.setVisible(False)
+            # 初期状態は表示状態に設定
+            self.text_edit.setVisible(True)
             
         except Exception as e:
             logging.error(f"基本プロパティ設定エラー: {e}")
@@ -99,6 +99,31 @@ class TextInputHandler(QObject):
             self.completer.setModel(self.filesystem_model)
             self.completer.setCaseSensitivity(Qt.CaseInsensitive)  # type: ignore
             self.completer.setCompletionMode(QCompleter.PopupCompletion)  # type: ignore
+            
+            # 重要: 補完ポップアップの親ウィジェットを明示的に設定
+            try:
+                popup = self.completer.popup()
+                if popup is not None:
+                    # 親ウィジェットを設定して独立ウィンドウ化を防ぐ
+                    main_window = self.text_edit.window()
+                    if main_window is not None:
+                        popup.setParent(main_window)
+                    else:
+                        popup.setParent(self.text_edit)
+                    
+                    # ウィンドウフラグを調整（独立ウィンドウフラグを削除）
+                    try:
+                        # 独立ウィンドウフラグを削除してポップアップとして動作させる
+                        current_flags = popup.windowFlags()
+                        # type: ignore を使用して型チェックを回避
+                        new_flags = current_flags & ~Qt.WindowType.Window  # type: ignore
+                        popup.setWindowFlags(new_flags)  # type: ignore
+                    except Exception as flag_error:
+                        logging.warning(f"ウィンドウフラグ設定エラー: {flag_error}")
+                    
+                    logging.debug("補完ポップアップの親子関係を修正しました")
+            except Exception as popup_error:
+                logging.warning(f"補完ポップアップ設定エラー: {popup_error}")
             
             # テキストエディットに設定
             self.text_edit.setCompleter(self.completer)
@@ -308,12 +333,21 @@ class TextInputHandler(QObject):
             """)
             
             # 一定時間後に元に戻す
-            # TODO: QTimerを使用して背景色をリセット
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(3000, self._reset_error_style)  # 3秒後にリセット
             
             logging.warning(f"無効なパス入力: {path}")
             
         except Exception as e:
             logging.error(f"無効パス処理エラー: {e}")
+    
+    def _reset_error_style(self):
+        """エラー表示スタイルをリセット"""
+        try:
+            if self.text_edit:
+                self.text_edit.setStyleSheet("")  # スタイルをクリア
+        except Exception as e:
+            logging.error(f"エラースタイルリセットエラー: {e}")
     
     def _add_to_history(self, path: str):
         """パス履歴に追加"""

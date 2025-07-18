@@ -36,6 +36,33 @@ class AddressBarManager:
         # アドレスバーのシグナル接続
         if self.address_bar and hasattr(self.address_bar, 'path_changed'):
             self.address_bar.path_changed.connect(self.on_address_changed)
+        
+        # アドレスバーの初期設定
+        self._initialize_address_bar()
+    
+    def _initialize_address_bar(self):
+        """アドレスバーの初期設定"""
+        try:
+            if not self.address_bar:
+                logging.warning("アドレスバーコンポーネントが設定されていません")
+                return
+            
+            # 表示状態を確保
+            if hasattr(self.address_bar, 'setVisible'):
+                self.address_bar.setVisible(True)
+            
+            # プレースホルダーを設定（フォルダラベルの場合は不要）
+            # self.set_placeholder_text("パスを入力してください...")
+            
+            # ホームディレクトリをデフォルトパスとして設定
+            import os
+            home_path = os.path.expanduser("~")
+            self.update_address_bar(home_path)
+            
+            logging.debug("フォルダパス表示初期化完了")
+            
+        except Exception as e:
+            logging.error(f"アドレスバー初期化エラー: {e}")
     
     def on_address_changed(self, new_path):
         """GIMP風アドレスバーでパスが変更された時の処理"""
@@ -112,9 +139,15 @@ class AddressBarManager:
             logging.error(f"無効パス処理エラー: {e}")
     
     def update_address_bar(self, folder_path):
-        """アドレスバーの表示を更新"""
+        """フォルダパス表示ラベルを更新"""
         try:
+            logging.debug(f"=== AddressBarManager.update_address_bar呼び出し ===")
+            logging.debug(f"folder_path: {folder_path}")
+            logging.debug(f"self.address_bar: {self.address_bar}")
+            logging.debug(f"self.address_bar type: {type(self.address_bar) if self.address_bar else None}")
+            
             if not self.address_bar:
+                logging.warning("フォルダパス表示更新: フォルダラベルが設定されていません")
                 return
             
             # パスを正規化
@@ -123,22 +156,42 @@ class AddressBarManager:
             # 現在のパスを更新
             self.current_path = normalized_path
             
-            # アドレスバーを更新（シグナル発火を避けるため一度クリア）
-            self.address_bar.setText("")
-            self.address_bar.setText(normalized_path)
+            # フォルダラベルを更新
+            if hasattr(self.address_bar, 'update_folder_path'):
+                # 新しいフォルダラベルの場合
+                logging.debug("新しいフォルダラベルのupdate_folder_pathメソッドを呼び出し")
+                self.address_bar.update_folder_path(normalized_path)
+            elif hasattr(self.address_bar, 'setText'):
+                # 旧来のQLineEdit/QLabelの場合（後方互換性）
+                logging.debug("setTextメソッドを呼び出し")
+                self.address_bar.setText(normalized_path)
+            elif hasattr(self.address_bar, 'set_path'):
+                # IntegratedAddressBarの場合（後方互換性）
+                logging.debug("set_pathメソッドを呼び出し")
+                self.address_bar.set_path(normalized_path)
+            else:
+                logging.warning(f"フォルダラベルに適切な設定メソッドが見つかりません: {type(self.address_bar)}")
+                logging.debug(f"利用可能なメソッド: {[attr for attr in dir(self.address_bar) if not attr.startswith('_')]}")
+            
+            logging.debug(f"フォルダパス表示更新完了: {normalized_path}")
             
         except Exception as e:
-            logging.error(f"アドレスバー更新エラー: {e}")
+            logging.error(f"フォルダパス表示更新エラー: {e}")
     
     def clear_address_bar(self):
-        """アドレスバーをクリア"""
+        """フォルダパス表示をクリア"""
         try:
             if self.address_bar:
-                self.address_bar.setText("")
+                if hasattr(self.address_bar, 'update_folder_path'):
+                    # 新しいフォルダラベルの場合
+                    self.address_bar.update_folder_path("")
+                elif hasattr(self.address_bar, 'setText'):
+                    # 旧来のQLineEdit/QLabel の場合
+                    self.address_bar.setText("")
             self.current_path = None
             
         except Exception as e:
-            logging.error(f"アドレスバークリアエラー: {e}")
+            logging.error(f"フォルダパス表示クリアエラー: {e}")
     
     def go_to_parent_folder(self):
         """親フォルダへ移動"""
@@ -310,8 +363,45 @@ class AddressBarManager:
     def set_placeholder_text(self, placeholder):
         """プレースホルダーテキストを設定"""
         try:
-            if self.address_bar and hasattr(self.address_bar, 'setPlaceholderText'):
-                self.address_bar.setPlaceholderText(placeholder)
+            if self.address_bar:
+                # IntegratedAddressBarの場合
+                if hasattr(self.address_bar, 'text_input_handler'):
+                    handler = self.address_bar.text_input_handler
+                    if handler and hasattr(handler, 'text_edit') and handler.text_edit:
+                        handler.text_edit.setPlaceholderText(placeholder)
+                        logging.debug(f"統合アドレスバーのプレースホルダーを設定: {placeholder}")
+                        return
+                
+                # 標準QLineEditの場合
+                if hasattr(self.address_bar, 'setPlaceholderText'):
+                    self.address_bar.setPlaceholderText(placeholder)
+                    logging.debug(f"アドレスバーのプレースホルダーを設定: {placeholder}")
+                    return
+                
+                # カスタムメソッドの場合
+                if hasattr(self.address_bar, 'set_placeholder_text'):
+                    self.address_bar.set_placeholder_text(placeholder)
+                    logging.debug(f"カスタムアドレスバーのプレースホルダーを設定: {placeholder}")
+                    return
+                
+                logging.debug(f"アドレスバーにプレースホルダー設定機能が見つかりません - タイプ: {type(self.address_bar)}")
+            else:
+                logging.debug("アドレスバーが設定されていません")
                 
         except Exception as e:
             logging.error(f"プレースホルダー設定エラー: {e}")
+    
+    def apply_delayed_theme(self):
+        """遅延テーマ適用"""
+        try:
+            # 現在のテーマを取得して適用
+            if hasattr(self.main_window, 'theme_manager'):
+                current_theme = self.main_window.theme_manager.get_current_theme()
+                theme_name = current_theme.value if hasattr(current_theme, 'value') else str(current_theme)
+                self.apply_theme(theme_name)
+            else:
+                # フォールバック：デフォルトテーマを適用
+                self.apply_theme("light")
+                
+        except Exception as e:
+            logging.error(f"遅延テーマ適用エラー: {e}")

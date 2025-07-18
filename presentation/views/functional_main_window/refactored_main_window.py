@@ -143,9 +143,18 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
                     if folder_path:
                         self.logger.info(f"フォルダ選択: {folder_path}")
                         self.main_window.show_status_message(f"選択されたフォルダ: {folder_path}")
+                        
                         # フォルダ内容の読み込み処理
                         if self.main_window.left_panel_mgr:
                             self.main_window.left_panel_mgr.refresh_folder_content(folder_path)
+                        
+                        # アドレスバーの更新処理
+                        if hasattr(self.main_window, 'address_bar_mgr') and self.main_window.address_bar_mgr:
+                            self.logger.debug(f"select_folderからaddress_bar_mgr.update_address_barを呼び出し: {folder_path}")
+                            self.main_window.address_bar_mgr.update_address_bar(folder_path)
+                        else:
+                            self.logger.warning("select_folder: address_bar_mgrが利用できません")
+                            
                 except Exception as e:
                     self.logger.error(f"フォルダ選択エラー: {e}")
             
@@ -153,6 +162,13 @@ class RefactoredFunctionalMainWindow(MainWindowCore):
                 """アドレス変更処理"""
                 self.logger.info(f"アドレス変更: {new_path}")
                 self.main_window.show_status_message(f"パス変更: {new_path}")
+                
+                # アドレスバーマネージャーでアドレス表示を更新
+                if hasattr(self.main_window, 'address_bar_mgr') and self.main_window.address_bar_mgr:
+                    self.logger.debug(f"on_address_changedからaddress_bar_mgr.update_address_barを呼び出し: {new_path}")
+                    self.main_window.address_bar_mgr.update_address_bar(new_path)
+                else:
+                    self.logger.warning("address_bar_mgrが利用できません")
             
             def go_to_parent_folder(self):
                 """親フォルダ移動処理"""

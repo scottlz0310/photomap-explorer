@@ -242,29 +242,58 @@ def create_modern_controls(parent=None):
 
 def create_controls(on_address_changed_callback=None, on_parent_button_callback=None):
     """
-    後方互換性のためのcreate_controls関数
+    シンプルなフォルダパス表示コントロール
     
-    元の ui/controls.py の create_controls 関数と同じインターフェースを提供
+    アドレスバーの代わりに、カレントフォルダをラベル形式で表示
     
     Args:
-        on_address_changed_callback: アドレス変更時のコールバック
+        on_address_changed_callback: アドレス変更時のコールバック（互換性のため）
         on_parent_button_callback: 親フォルダボタンクリック時のコールバック
         
     Returns:
-        tuple: (controls_widget, address_bar, parent_button)
+        tuple: (controls_widget, folder_label, parent_button)
     """
-    from PyQt5.QtWidgets import QPushButton, QWidget, QHBoxLayout
+    from PyQt5.QtWidgets import QPushButton, QWidget, QHBoxLayout, QLabel
     from PyQt5.QtGui import QFont
+    from PyQt5.QtCore import Qt
     
-    # 統合アドレスバーを作成
-    address_bar = IntegratedAddressBar()
+    # レイアウト作成
+    controls_widget = QWidget()
+    layout = QHBoxLayout(controls_widget)
+    layout.setContentsMargins(5, 5, 5, 5)
+    layout.setSpacing(10)
     
-    # コールバック設定
-    if on_address_changed_callback:
-        address_bar.path_changed.connect(on_address_changed_callback)
+    # フォルダパス表示ラベルを作成
+    folder_label = QLabel("フォルダを選択してください", controls_widget)
+    # folder_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+    folder_label.setStyleSheet("""
+        QLabel {
+            background-color: #f0f0f0;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #333;
+        }
+    """)
     
-    # 親フォルダに戻るボタンを作成（元の設計に従う）
-    parent_button = QPushButton("⬆️")
+    # フォルダパス更新メソッドを追加
+    def update_folder_path(path):
+        """フォルダパスを更新する"""
+        import os
+        if path and os.path.exists(path):
+            folder_label.setText(f"📁 {path}")
+            folder_label.setToolTip(f"現在のフォルダ: {path}")
+        else:
+            folder_label.setText("フォルダを選択してください")
+            folder_label.setToolTip("")
+    
+    # メソッドをラベルに追加（互換性のため）
+    folder_label.update_folder_path = update_folder_path
+    folder_label.update_address = update_folder_path  # IntegratedAddressBarとの互換性
+    
+    # 親フォルダに戻るボタンを作成
+    parent_button = QPushButton("⬆️", controls_widget)
     parent_button.setFixedSize(38, 30)
     parent_button.setToolTip("親フォルダへ移動")
     
@@ -276,12 +305,8 @@ def create_controls(on_address_changed_callback=None, on_parent_button_callback=
     parent_font.setPointSize(12)
     parent_button.setFont(parent_font)
 
-    # レイアウト作成（元の設計に従う）
-    controls_widget = QWidget()
-    layout = QHBoxLayout(controls_widget)
-    layout.addWidget(address_bar, 1)  # 拡張可能
+    # ウィジェットをレイアウトに追加
+    layout.addWidget(folder_label, 1)  # 拡張可能
     layout.addWidget(parent_button)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(5)
     
-    return controls_widget, address_bar, parent_button
+    return controls_widget, folder_label, parent_button

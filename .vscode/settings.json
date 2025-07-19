@@ -7,11 +7,17 @@
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.indexing": true,
     "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.stubPath": "./typings",
     "files.watcherExclude": {
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/node_modules/**": true,
-        "**/.hg/store/**": true
+        "**/.hg/store/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/logs/**": true
     },
     "files.exclude": {
         "**/.git": true,
@@ -22,5 +28,13 @@
         "**/Thumbs.db": true
     },
     "files.autoSave": "off",
-    "files.hotExit": "onExit"
+    "files.hotExit": "onExit",
+    "files.associations": {
+        "*.py": "python"
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    "git.autofetch": true
 }
